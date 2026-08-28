@@ -1,0 +1,296 @@
+<html>
+    <style>
+        body {
+            font-family: arial, sans-serif;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        td, th {
+            border: 2px solid #000000;
+            text-align: center;
+            padding: 8px;
+        }
+        tr:first-child {
+            background-color: #dddddd;
+        }
+        .florida-tech-logo {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+
+    <title>Project Plan - AI Task Agent</title>
+    <body>
+        <h1 id="project-plan">Project Plan</h1>
+        <a href="index.html">Main Page<br></a>
+        <h2 id="goal-motivation">Goal and Motivation</h2>
+        <p>In our everyday life, we frequently do repetitive actions on our computers, such as checking our email, managing calendars, and browsing the internet for the same websites over and over. These repetitive actions on computers have become essential to our everyday life, but the repetitive actions become time consuming. Even though that time can be better spent elsewhere, we are required to invest our time in them because of how essential they are to our jobs, social life, and communications. These repetitive tasks can be no longer a waste of your time by using our AI Task Agent to accomplish them.</p>
+        <p>There are many sectors in our technological world that can be enhanced to provide more value. Currently, MCP servers are tuned to a single domain and preprogrammed tools. This only lets the server do specified actions for an entity, however as a result it becomes not very flexible at all. LLMs are also constrained by their cutoff window (memory) and tuned for general versatility. This constrained cutoff window is sometimes too large for a simple task and sometimes not enough for larger, more complex tasks. Since LLMs are tuned for general versatility, they struggle with specific actions as a side effect. Finally, a multitude of systems and APIs can lead to security concerns and vulnerabilities, risking data theft and loss. While some of these individual subproblems have been attempted in industry, they have not been solved altogether, where our solution to all of these technologies working together is our AI Task Agent.</p>
+        
+        <hr>
+
+        <h2 id="approach">Approach</h2>
+        <h3 id="feature-1-approach">Feature 1 (Task Execution using Generic MCP Tools)</h3>
+        <blockquote><i>“The user can ask the agent to perform a variety of tasks that operate the computer itself via flexible generic tools (instead of less flexible, larger tools).”</i></blockquote>
+        <p>The user can interact with an AI agent, which has access to a properly sandboxed MCP that is given full control of a virtual machine. The agent maps a task into multiple steps, which are determined by the model. The agent can then perform tasks using a combination of generic, hardcoded tools to operate the computer. For example, the user can ask the agent to search the Internet, write and run code, and interact with websites. Additionally, the user can configure the system to run air-gapped (without network access), and the agent will continue to complete tasks.</p>
+        <h3 id="feature-2-approach">Feature 2 (Improved AI Knowledge via User-Supplied Documentation)</h3>
+        <blockquote><i>“The user can improve agent memory and knowledge by providing reliable documentation.”</i></blockquote>
+        <p>The user can provide reliable and relevant documents to the model to improve performance and knowledge. Providing reliable documentation allows information curated by the user to be injected to the agent, which can include internal or non-public docs. The user provided documentation is intelligently provided to the model, adding context relevant to the user's request.</p>
+        <h3 id="feature-3-approach">Feature 3 (Versatile Deployment with Widespread Hardware Compatibility)</h3>
+        <blockquote><i>"The user can have up-to-date software with dynamic update of a system that has network access, or remain offline for security reasons.”</i></blockquote>
+        <p>The user can configure the deployment for various custom environments. Additionally, the user can select specific tools during deployment and disallow undesired tools, such as running code or Internet access. The user can utilize an installation wizard to easily download the system, which consolidates LLM, MCP, and the client locally. The user can choose an air-gapped or Internet-connected version of the system, and for Internet-facing systems, the user can receive automatic updates. For air-gapped configurations, installation is static and will not automatically update.</p>
+        
+        <hr>
+
+        <h2 id="novel-features">Novel Features/Functionalities</h2>
+        <p>Some systems that can perform some computer operations currently exist, such as OpenClaw. These systems quickly expose an agent, give it tools, and allow it to work.</p>
+        <p>Our system is a complete, deployable computer-control platform that can safely operate in multiple, secure environments. A major advantage of this system is that everything is local and tuned for specific use cases, and can be tested by the Coast Guard Aux.</p>
+        <p>This architecture also enforces (not encourages) security. The AI's computer is isolated and sandboxed by default. A strict ingress/egress component is included, but does not allow the agent to interact with the host computer.</p>
+        <p>Additionally, the project supports multiple deployment types, allowing the ATA system to be supported on an enterprise-grade scale.</p>
+        <p>A unique feature of the system is agent memory as an explicit subsystem. Current systems such as OpenClaw typically only expose RAG, while our system will include a robust memory management system that allows for dynamic content storage.</p>
+        <p>Finally, the most novel/unique technical contribution is a “generic MCP.” Most MCP servers are domain-specific (e.g. GitHub MCP, Browser MCP, Database MCP, etc.). Our MCP is general enough to support operating system controls, and expose the computer itself.</p>
+        
+        <hr>
+
+        <h2 id="algorithms-tools">Algorithms and Tools</h2>
+        <h3 id="feature-1-tools">Feature 1 (Task Execution using Generic MCP Tools)</h3>
+        <ul>
+            <li>Uses a properly sandboxed MCP that is given full computer control.</li>
+            <ul>
+                <li><i>Python, FastMCP, Uvicorn, Linux, Docker</i></li>
+            </ul>
+            <li>The agent maps a task into multiple steps.</li>
+            <ul>
+                <li><i>Gemma4 31B, Qwen3.8 27B, Transformers, PyTorch, OpenAI-Agents, Unsloth</i></li>
+            </ul>
+            <li>The agent performs tasks using a combination of generic, hardcoded tools to operate the computer.</li>
+            <ul>
+                <li><i>Python, FastMCP, Linux, PyAutoGUI, Computer-control libraries/tools</i></li>
+            </ul>
+            <li>Mapping of tasks to steps and shared tools is in the model's context window.</li>
+            <ul>
+                <li><i>Gemma4 31B, Qwen3.8 27B, Transformers, OpenAI-Agents, Unsloth</i></li>
+            </ul>
+            <li>For air-gapped systems without network access, generic tools that need network access are removed via initial configuration.</li>
+            <ul>
+                <li><i>Python, FastMCP, Linux, Docker</i></li>
+            </ul>
+        </ul>
+        <h3 id="feature-2-tools">Feature 2 (Improved AI Knowledge via User-Supplied Documentation)</h3>
+        <ul> 
+            <li>An MCP tool that searches the RAG for model-determined “search keywords” utilizing two types of supporting documents.</li>
+            <ul>
+                <li><i>Python, OpenAI-Agents, FastMCP, HuggingFace, Vector Database, text-embedding-3-large</i></li>
+            </ul>
+            <li>A normal embedding model injects context into the prompt.</li>
+            <ul>
+                <li><i>text-embedding-3-large, OpenAI, HuggingFace, Python, Unsloth</i></li>
+            </ul>
+        </ul>
+        <h3 id="feature-3-tools">Feature 3 (Versatile Deployment with Widespread Hardware Compatibility)</h3>
+        <ul>
+            <li>Tools are selected by the user during deployment; should the user not desire a specific tool or toolset (e.g. disabling running code or Internet access), they will do so during installation wizard.</li>
+            <ul>
+                <li><i>Docker, FastMCP, Python, Nginx</i></li>
+            </ul>
+            <li>Utilize A/B software for update versioning for systems connected to the Internet.</li>
+            <ul>
+                <li><i>Docker, GitHub</i></li>
+            </ul>
+            <li>Systems can consolidate LLM, MCP, and client locally.</li>
+            <ul>
+                <li><i>Docker, Linux, FastMCP, Gemma4 31B, Qwen3.8 27B, Unsloth, HuggingFace, PyTorch</i></li>
+            </ul>
+            <li>System can be Internet isolated (air-gapped) or connected to the Internet; dynamic installation allows for flexibility.</li>
+            <ul>
+                <li><i>Linux, Docker</i></li>
+            </ul>
+            <li>For air-gapped systems without network access, this feature is not available and manual update is needed.</li>
+            <ul>
+                <li><i>Docker, Linux, USB (hardware)</i></li>
+            </ul>
+        </ul>
+
+        <hr>
+
+        <h2 id="technical-challenges">Technical Challenges</h2>
+        <h3 id="feature-1-challenges">Feature 1 (Task Execution using Generic MCP Tools)</h3>
+        <ul>
+            <li>Uses a properly sandboxed MCP that is given full computer control.</li>
+            <ul>
+                <li><i>Is the MCP properly sandboxed?</i></li>
+                <li><i>Can the agent somehow leave or access something outside of the sandbox?</i></li>
+                <li><i>How do we isolate processes and resources?</i></li>
+            </ul>
+            <li>Uses a properly sandboxed MCP that is given full computer control.</li>
+            <ul>
+                <li><i>Can we balance a small LLM with complex tool selection and reasoning?</i></li>
+                <li><i>What if the LLM selected can not map the task into steps?</i></li>
+            </ul>
+            <li>The agent performs tasks using a combination of generic hardcoded tools to operate the computer.</li>
+            <ul>
+                <li><i>Can we find a small, generic list of tools?</i></li>
+                <li><i>What about edge-cases or obscure goals?</i></li>
+            </ul>
+            <li>Mapping of tasks to steps and shared tools are in the model's context window.</li>
+            <ul>
+                <li><i>Can the small model sufficiently handle the tools in its context window?</i></li>
+                <li><i>Can we balance sufficient tools with a large enough context window?</i></li>
+            </ul>
+            <li>For air-gapped systems without network access, generic tools that need network access are removed via initial configuration.</li>
+            <ul>
+                <li><i>Will the user understand how and which tools to disable?</i></li>
+                <li><i>What if the user leaves a tool enabled, and it errors out?</i></li>
+            </ul>
+        </ul>
+        <h3 id="feature-2-challenges">Feature 2 (Improved AI Knowledge via User-Supplied Documentation)</h3>
+        <ul>
+            <li>An MCP tool that searches the RAG for model-determined “search keywords” utilizing two types of supporting documents.</li>
+            <ul>
+                <li><i>How do we communicate to the user that their documents must be reliable?</i></li>
+                <li><i>What if the LLM is not good at searching context with the tool?</i></li>
+            </ul>
+            
+            <li>A normal embedding model injects context into the prompt.</li>
+            <ul>
+                <li><i>How do we choose good parameters for how much, and which, context to pull from the vector store?</i></li>
+                <li><i>How do we provide this to the model efficiently?</i></li>
+            </ul>
+        </ul>
+        <h3 id="feature-3-challenges">Feature 3 (Versatile Deployment with Widespread Hardware Compatibility Tools)</h3>
+        <ul>
+            <li>Tools are selected by the user during deployment; should the user not desire a specific tool or toolset (e.g. disabling running code or Internet access), they will do so during installation wizard.</li>
+            <ul>
+                <li><i>Can we trust the user to complete this step correctly?</i></li>
+                <li><i>For example, a tool would error if they leave Internet-requiring tools enabled on an air-gapped system.</i></li>
+            </ul>
+            <li>Utilize A/B software for update versioning for systems connected to the Internet. </li>
+            <ul>
+                <li><i>How can we implement the versioning system?</i></li>
+                <li><i>How can we make this step automatic once we push an update?</i></li>
+            </ul>
+            <li>Systems can consolidate LLM, MCP, and client locally.</li>
+            <ul>
+                <li><i>How can we integrate all 3 of these systems on resource constrained systems?</i></li>
+                <li><i>What minimum system requirements are needed?</i></li>
+            </ul>
+            <li>System can be Internet isolated (air-gapped) or connected to the Internet; dynamic installation allows for flexibility.</li>
+            <ul>
+                <li><i>How do we ensure our system continues to function without Internet?</i></li>
+                <li><i>What happens if it tries to access the Internet and is denied?</i></li>
+            </ul>
+            <li>For air-gapped systems without network access, this feature is not available and manual update is needed.</li>
+            <ul>
+                <li><i>Would we need to dynamically test for Internet access?</i></li>
+                <li><i>How will users manually update?</i></li>
+            </ul>
+        </ul>
+
+        <hr>
+
+        <h2 id="milestones">Milestones</h2>
+        <p>The first three project milestones are present below.</p>
+        <h3 id="milestones-status">Feature Statuses</h3>
+        <p>Feature statuses are as follows:</p>
+        <ol>
+            <li><b>Proof-of-Concept (POC)</b>: The lowest completion status, showing that a feature or capability is possible. Is not finished, may be bug-heavy, and may not meet any requirements.</li>
+            <li><b>Prototype</b>: A POC that meets some requirements and is fairly reliable.</li>
+            <li><b>Minimum Viable Product (MVP)</b>: Stage at which the subsystem meets the minimum requirements and bug/security testing to be considered complete.</li>
+            <li><b>Production (Prod)</b>: Established when the MVP has undergone thorough security and bug testing and meets or exceeds all requirements. O&M may occur in this stage.</li>
+        </ol>
+
+        <h3 id="milestone-1">Milestone 1: Itemized Tasks (Sept. 28)</h3>
+        <p><blockquote><i>Accomplishing this milestone means that the project is fully planned and ready for development.</i></blockquote></p>
+        <ul>
+            <li>Compare and select technical tools for Large Language Models (LLMs) (req. 1), Deployment Environment (2), Model Context Protocol Server (3), Linux (3.4, 4), Browser (3.10.1), Email (3.10.3), PDF reading (3.11.1), Communications (3.12.1-3.12.3), Retrieval-Augmented Generation (RAG) (5.1), Agentic Dynamic Memory (5.3), Context Window Management (5.5), Fast Context (5.6), and Graphical User Interfaces (6.1).</li>
+            <li>Provide small (“hello world”) demos to evaluate the tools for Large Language Models (LLMs) (req. 1), Deployment Environment (2), Model Context Protocol Server (3), Linux (3.4, 4), Browser (3.10.1), Email (3.10.3), PDF reading (3.11.1), Communications (3.12.1-3.12.3), Retrieval-Augmented Generation (RAG) (5.1), Agentic Dynamic Memory (5.3), Context Window Management (5.5), Fast Context (5.6), and Graphical User Interfaces (6.1).</li>
+            <li>Resolve technical challenges: Task Execution using Generic MCP Tools, Improved AI Knowledge via User-Supplied Documentation, Versatile Deployment with Widespread Hardware Compatibility. (see Technical Challenges section for full list)</li>
+            <li>Compare and select collaboration tools for software development, documents/presentations, communication, task calendar.</li>
+            <li>Create Requirement Document.</li>
+            <li>Create Design Document.</li>
+            <li>Create Test Plan.</li>
+        </ul>
+        <h3 id="milestone-2">Milestone 2: Itemized Tasks (Oct. 26)</h3>
+        <p><blockquote><i>Accomplishing this milestone means that the project has done initial development and a working system is delivered.</i></blockquote></p>
+        <ul>
+            <li>Implement, test, and demo <b>Prototype for Task Execution using Generic MCP Tools</b>, without advanced security features implemented (feature 1).</li>
+            <li>Implement, test, and demo <b>Prototype AI Agent</b>, with full connection to Prototype Task Execution using Generic MCP Tools (feature 1).</li>
+            <li>Implement, test, and demo <b>POC RAG memory</b>, with basic documentation tested and linked to Prototype AI Agent (feature 2).</li>
+            <li>Implement, test, and demo <b>Prototype for Versatile Deployment with Widespread Hardware Compatibility</b>, with the system functional to current development on a new install on a new system (feature 3).</li>
+        </ul>
+        <h3 id="milestone-3">Milestone 3: Itemized Tasks (Nov. 23)</h3>
+        <p><blockquote><i>Accomplishing this milestone means that most features are MVP status and that a fully function system is complete, albeit not fully production-ready.</i></blockquote></p>
+        <ul>
+            <li>Implement, test, and demo <b>MVP for Task Execution using Generic MCP Tools</b>, without advanced security features implemented (feature 1).</li>
+            <li>Implement, test, and demo <b>MVP AI Agent</b>, with full connection to Prototype Task Execution using Generic MCP Tools (feature 1).</li>
+            <li>Implement, test, and demo <b>Prototype RAG memory</b>, with basic documentation tested and linked to Prototype AI Agent (feature 2).</li>
+            <li>Implement, test, and demo <b>MVP for Versatile Deployment with Widespread Hardware Compatibility</b>, with the system functional to current development on a new install on a new system (feature 3).</li>
+        </ul>
+        
+        <hr>
+
+        <h2 id="task-matrices">Task Matrices</h2>
+        <h3 id="task-matrix-milestone-1">Milestone 1</h3>
+        <table>
+            <tr>
+                <th>Task</th>
+                <th>Jadon</th>
+                <th>Jacob E</th>
+                <th>Ioannis</th>
+                <th>Jacob L</th>
+            </tr>
+            <tr>
+                <td>Compare and Select Technical Tools</td>
+                <td>LLMs, Deployment Environment, RAG</td>
+                <td>Browser, Email, Agentic Dynamic Memory, GUI</td>
+                <td>MCP Server, PDF Reading, Context Window Management</td>
+                <td>Linux, Communications, Fast Context</td>
+            </tr>
+            <tr>
+                <td>“Hello World” Demos</td>
+                <td>LLMs, Deployment Environment, RAG</td>
+                <td>Browser, Email, Agentic Dynamic Memory, GUI</td>
+                <td>MCP Server, PDF Reading, Context Window Management</td>
+                <td>Linux, Communications, Fast Context</td>
+            </tr>
+            <tr>
+                <td>Resolve Technical Challenges</td>
+                <td>Is the MCP properly sandboxed?<br>Can the agent somehow leave or access something outside of the sandbox?<br>How do we isolate processes and resources?<br>Can we balance a small LLM with complex tool selection and reasoning? What if the LLM selected cannot map the task into steps?<br>How do we choose good parameters for how much, and which, context to pull from the vector store?<br>How do we provide this to the model efficiently?<br>How can we implement the versioning system?<br>How can we make this step automatic once we push an update?<br>Would we need to dynamically test for Internet access?<br>How will users manually update?</td>
+                <td>How do we communicate to the user that their documents must be reliable?<br>What if the LLM is not good at searching context with the tool?</td>
+                <td>Can we find a small, generic list of tools? What about edge-cases or obscure goals?<br>Can the small model sufficiently handle the tools in its context window?<br>Can we balance sufficient tools with a large enough context window?<br>Will the user understand how and which tools to disable?<br>What if the user leaves a tool enabled, and it errors out?<br>How can we integrate all 3 of these systems on resource constrained systems?<br>What minimum system requirements are needed?</td>
+                <td>Can we trust the user to complete the installation step correctly?<br>For example, a tool would error if they leave Internet-requiring tools enabled on an air-gapped system.<br>How do we ensure our system continues to function without Internet?<br>What happens if it tries to access the Internet and is denied?</td>
+            </tr>
+            <tr>
+                <td>Compare and Select Collaboration Tools</td>
+                <td>Task Calendar</td>
+                <td>Documents/Presentations</td>
+                <td>Communication</td>
+                <td>Software Development</td>
+            </tr>
+            <tr>
+                <td>Requirement Document</td>
+                <td>Write 40%</td>
+                <td>Write 20%</td>
+                <td>Write 20%</td>
+                <td>Write 20%</td>
+            </tr>
+            <tr>
+                <td>Design Document</td>
+                <td>Write 30%</td>
+                <td>Write 10%</td>
+                <td>Write 20%</td>
+                <td>Write 40%</td>
+            </tr>
+            <tr>
+                <td>Test Plan</td>
+                <td>Write 10%</td>
+                <td>Write 40%</td>
+                <td>Write 30%</td>
+                <td>Write 20%</td>
+            </tr>
+        </table>
+        <img src="assets/images/1-hrpreview.png" alt="Florida Tech Primary Logo" width="226" height="150" class="florida-tech-logo">
+    </body>
+</html>
