@@ -1,0 +1,33 @@
+<!--
+index.html
+Owner    : Jadon Duff
+Authors  : Jadon Duff, ChatGPT
+Date     : 2026-09-28
+Version  : v0.0.1
+Project  : AI Task Agent
+Software : Python 3.14.3
+
+Used For: Entry point to the AI Task Agent frontend.
+
+References: None.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+  <form id="f">
+    <input name="value" required>
+    <button type="submit">Submit</button>
+  </form>
+  <pre id="out"></pre>
+
+  <script>
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      out.textContent = "...";
+      const res = await fetch("/submit", { method: "POST", body: new FormData(f) });
+      out.textContent = await res.text();
+    };
+  </script>
+</body>
+</html>
