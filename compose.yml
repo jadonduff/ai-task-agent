@@ -1,3 +1,20 @@
+# Docker Compose
+# ----------------------------------------------------------------------
+# Title    : AI Task Agent Docker Compose Configuration
+# Owner    : Jadon Duff
+# Authors  : Jadon Duff
+# Date     : 2026-10-02
+# Version  : v0.0.1
+# Project  : AI Task Agent
+# Software : Docker version 29.8.1
+# ----------------------------------------------------------------------
+# Description:
+#   Docker compose file for building Web Server and MCP Server.
+#
+# References:
+#   Docker Docs: docs.docker.com
+# ----------------------------------------------------------------------
+
 services:
   ai-task-agent:
     build:
