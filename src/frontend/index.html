@@ -14,20 +14,13 @@ References: None.
 
 <!DOCTYPE html>
 <html>
-<body>
-  <form id="f">
-    <input name="value" required>
-    <button type="submit">Submit</button>
-  </form>
-  <pre id="out"></pre>
 
-  <script>
-    f.onsubmit = async (e) => {
-      e.preventDefault();
-      out.textContent = "...";
-      const res = await fetch("/submit", { method: "POST", body: new FormData(f) });
-      out.textContent = await res.text();
-    };
-  </script>
+<head>
+  <title>AI Task Agent</title>
+</head>
+
+<body>
+  Hello World!
 </body>
+
 </html>
