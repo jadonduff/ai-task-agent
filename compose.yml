@@ -1,0 +1,13 @@
+services:
+  ai-task-agent:
+    build:
+      context: .
+      dockerfile: dockerfiles/web-server/Dockerfile
+    ports:
+    - "6573:6573"
+  mcp-server:
+    build:
+      context: .
+      dockerfile: dockerfiles/mcp-server/Dockerfile
+    ports:
+    - "6574:6574"

@@ -1,1 +1,5 @@
 https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/
+https://github.com/dockersamples/nginx-node-redis
+https://hub.docker.com/_/python
+https://gofastmcp.com/getting-started/welcome
+https://gofastmcp.com/getting-started/installation
