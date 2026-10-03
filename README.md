@@ -31,6 +31,8 @@ Example `.env`:
 LLAMA_MODEL_PATH=/Users/AI/.cache/huggingface/hub/Qwen3.8-27B-UD-Q8_K_XL.gguf
 ```
 
+**Note**: Currently, `llama.cpp` does not automatically install. You will need to manually install `llama.cpp` which comes with `llama-server`.
+
 ---
 
 ## Routes & Architecture
