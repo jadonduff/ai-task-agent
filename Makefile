@@ -4,7 +4,7 @@
 # Owner    : Jadon Duff
 # Authors  : Jadon Duff, ChatGPT
 # Date     : 2026-10-02
-# Version  : v0.0.1
+# Version  : v0.0.2
 # Project  : AI Task Agent
 # Software : GNU Make 3.81
 # ----------------------------------------------------------------------
@@ -20,8 +20,17 @@
 build:
 	docker compose build
 
-run:
+run-mac:
+	./scripts/run-llm-mac.sh & docker compose up
+
+# make windows will run the application for Windows
+# TODO: create Windows llama-cli script
+run-windows:
 	docker compose up
 
-stop:
+stop-mac:
+	./scripts/stop-llm-mac.sh & docker compose down
+
+# TODO: make Windows stop script
+stop-windows:
 	docker compose down

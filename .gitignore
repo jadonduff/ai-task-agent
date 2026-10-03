@@ -3,3 +3,4 @@ __pycache__
 untracked.txt
 settings.json
 .vscode
+.env
