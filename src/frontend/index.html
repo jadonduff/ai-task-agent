@@ -11,16 +11,43 @@ Used For: Entry point to the AI Task Agent frontend.
 
 References: None.
 -->
-
 <!DOCTYPE html>
 <html>
 
 <head>
-  <title>AI Task Agent</title>
+    <meta charset="UTF-8">
+    <title>AI Task Agent</title>
 </head>
 
 <body>
-  Hello World!
+    <h1>AI Task Agent</h1>
+
+    <form id="prompt-form">
+        <input id="prompt" type="text" placeholder="Enter a prompt..." size="50" required>
+        <button type="submit">Send</button>
+    </form>
+
+    <pre id="output"></pre>
+
+    <script>
+        const form = document.getElementById("prompt-form");
+        const promptInput = document.getElementById("prompt");
+        const output = document.getElementById("output");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            output.textContent = "Thinking...";
+
+            const response = await fetch("/prompt", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: promptInput.value }),
+            });
+
+            output.textContent = await response.text();
+        });
+    </script>
 </body>
 
 </html>

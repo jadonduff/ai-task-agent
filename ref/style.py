@@ -21,3 +21,16 @@
 ## Subheader
 # Comment
 ### Debug (remove before submission)
+
+def function(x:int) -> str:
+    """Converts int to str.
+
+    Takes the provided input integer and converts to a string type.
+
+    Args:
+        x (int): The desired integer to convert to a string.
+
+    Returns:
+        str: The number converted to a string.
+    """
+    return str(x)

@@ -28,6 +28,11 @@ def add(a: int, b: int) -> int:
     """Add two numbers."""
     return a + b
 
+@mcp.tool
+def get_secret_number() -> int:
+    """Gets the secret number that is hidden."""
+    return 171201138
+
 
 if __name__ == "__main__":
     mcp.run()

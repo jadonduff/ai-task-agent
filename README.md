@@ -50,6 +50,17 @@ The **Large Language Model (LLM)** is ran by the host computer using `llama-serv
 
 ---
 
+## Documentation
+
+The `/docs` subdirectory contains the files rendered via GitHub pages for the Senior Design project website.
+
+The `/ref` subdirectory contains documentation files relevant to the codebase.
+
+---
+
 ## Quick Links
 
 [Web Application](http://127.0.0.1:6573)
+
+---
+*Updated Oct 6, 2026 by Jadon Duff*

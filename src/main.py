@@ -5,7 +5,7 @@
 # Owner    : Jadon Duff
 # Authors  : Jadon Duff, ChatGPT, Claude
 # Date     : 2026-09-28
-# Version  : v0.0.1
+# Version  : v0.0.2
 # Project  : AI Task Agent
 # Software : Python 3.14.3
 # ----------------------------------------------------------------------
@@ -17,13 +17,58 @@
 # ----------------------------------------------------------------------
 
 # ---- Libraries -------------------------------------------------------
+from contextlib import asynccontextmanager
+
+from agents import Agent, Runner, OpenAIChatCompletionsModel, set_tracing_disabled
+from fastapi.responses import FileResponse, PlainTextResponse
+from agents.mcp import MCPServerStreamableHttp
+from pydantic import BaseModel
+from openai import AsyncOpenAI
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+
+
+# ---- Setup -----------------------------------------------------------
+MODEL = "unsloth/Qwen3.8-27B-GGUF:Q8_K_XL"
+
+set_tracing_disabled(True)
+
+client = AsyncOpenAI(base_url="http://host.docker.internal:6575/v1", api_key="none")
+
+mcp_server = MCPServerStreamableHttp(
+    name="local-mcp",
+    params={"url": "http://mcp-server:6574/mcp"},
+    cache_tools_list=True,
+)
+
+agent = Agent(
+    name="Assistant",
+    instructions="You are a helpful assistant. Use the available tools when they help.",
+    model=OpenAIChatCompletionsModel(model=MODEL, openai_client=client),
+    mcp_servers=[mcp_server],
+)
+
 
 # ---- Main ------------------------------------------------------------
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await mcp_server.connect()
+    yield
+    await mcp_server.cleanup()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+class PromptRequest(BaseModel):
+    prompt: str
 
 
 @app.get("/")
 def index():
     return FileResponse("src/frontend/index.html")
+
+
+@app.post("/prompt")
+async def stream(req: PromptRequest):
+    result = await Runner.run(agent, input=req.prompt)
+    return PlainTextResponse(result.final_output)
