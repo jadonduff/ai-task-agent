@@ -2,7 +2,7 @@
 # ----------------------------------------------------------------------
 # Title    : AI Task Agent Makefile
 # Owner    : Jadon Duff
-# Authors  : Jadon Duff, ChatGPT
+# Authors  : Jadon Duff, Jacob Ewasko, ChatGPT
 # Date     : 2026-10-02
 # Version  : v0.0.2
 # Project  : AI Task Agent
@@ -26,11 +26,11 @@ run-mac:
 # make windows will run the application for Windows
 # TODO: create Windows llama-cli script
 run-windows:
-	docker compose up
+	start /B cmd /c "scripts\run-llm-windows.bat" & docker compose up
 
 stop-mac:
 	./scripts/stop-llm-mac.sh & docker compose down
 
 # TODO: make Windows stop script
 stop-windows:
-	docker compose down
+	cmd /c "scripts\stop-llm-windows.bat" & docker compose down
