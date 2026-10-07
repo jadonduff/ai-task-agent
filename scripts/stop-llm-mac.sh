@@ -1,3 +1,3 @@
 #!/bin/bash
 
-pkill -x llama-cli || true
+pkill -x llama-server || true
