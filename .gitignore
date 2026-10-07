@@ -1,6 +1,22 @@
-__pycache__
-.DS_Store
-untracked.txt
-settings.json
-.vscode
+# ---- Environment
 .env
+
+# ---- Python
+__pycache__/
+*.pyc
+.venv/
+
+# ---- OS Dev
+.vscode/
+.DS_Store
+
+# ---- Scratch
+settings.json
+untracked.txt
+
+# ---- Models
+*.gguf
+
+# ---- Transfer
+transfer/*
+!transfer/data.txt

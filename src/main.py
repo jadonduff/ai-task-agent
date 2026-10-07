@@ -25,12 +25,15 @@ from agents.mcp import MCPServerStreamableHttp
 from pydantic import BaseModel
 from openai import AsyncOpenAI
 from fastapi import FastAPI
-
+from pathlib import Path
 
 # ---- Setup -----------------------------------------------------------
 MODEL = "unsloth/Qwen3.8-27B-GGUF:Q8_K_XL"
 
 set_tracing_disabled(True)
+
+with open(Path('.') / 'src' / 'utilities' / 'system_prompt.md') as file:
+    SYSTEM_PROMPT = file.read()
 
 client = AsyncOpenAI(base_url="http://host.docker.internal:6575/v1", api_key="none")
 
@@ -42,7 +45,7 @@ mcp_server = MCPServerStreamableHttp(
 
 agent = Agent(
     name="Assistant",
-    instructions="You are a helpful assistant. Use the available tools when they help.",
+    instructions=SYSTEM_PROMPT,
     model=OpenAIChatCompletionsModel(model=MODEL, openai_client=client),
     mcp_servers=[mcp_server],
 )

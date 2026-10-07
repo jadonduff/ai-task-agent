@@ -32,6 +32,8 @@ services:
       dockerfile: dockerfiles/mcp-server/Dockerfile
     ports:
       - "6574:6574"
+    volumes:
+      - ./transfer:/transfer
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 6574), 2)"]
       interval: 2s
