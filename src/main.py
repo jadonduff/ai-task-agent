@@ -22,6 +22,7 @@ from contextlib import asynccontextmanager
 from agents import Agent, Runner, OpenAIChatCompletionsModel, set_tracing_disabled
 from fastapi.responses import FileResponse, PlainTextResponse
 from agents.mcp import MCPServerStreamableHttp
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from openai import AsyncOpenAI
 from fastapi import FastAPI
@@ -60,6 +61,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="src/frontend"), name="static")
 
 
 class PromptRequest(BaseModel):
