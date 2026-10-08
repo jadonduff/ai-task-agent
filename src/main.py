@@ -70,8 +70,23 @@ class PromptRequest(BaseModel):
 def index():
     return FileResponse("src/frontend/index.html")
 
+def format_run(prompt: str, result) -> str:
+    lines = [f"prompt: {prompt}", ""]
+    n = 0
+    for e in result.to_input_list()[1:]:
+        if e["type"] == "function_call":
+            n += 1
+            lines.append(f"toolcall{n}: called {e['name']}({e['arguments']})")
+        elif e["type"] == "function_call_output":
+            out = e["output"]
+            if isinstance(out, list):
+                out = " ".join(p.get("text", "") for p in out)
+            lines.append(f"  -> {out}")
+    lines += ["", f"response: {result.final_output}"]
+    return "\n".join(lines)
+
 
 @app.post("/prompt")
 async def stream(req: PromptRequest):
     result = await Runner.run(agent, input=req.prompt)
-    return PlainTextResponse(result.final_output)
+    return PlainTextResponse(format_run(req.prompt, result))
