@@ -32,6 +32,7 @@ services:
       dockerfile: dockerfiles/mcp-server/Dockerfile
     ports:
       - "6574:6574"
+      - "127.0.0.1:6576:6576"
     volumes:
       - ./transfer:/transfer
     healthcheck:

@@ -43,10 +43,13 @@ The **backend** is located in `src/backend`. It is hosted by a Python-based Fast
 
 The **Large Language Model (LLM)** is ran by the host computer using `llama-server`, which is a part of `llama.cpp`. This is the industry-standard way of hosting **LLMs** locally, and is not located in a Docker container as it needs native **GPU** acceleration. It lives on port `6575`.
 
+The **Docker Screen** is ran by the MCP server container. You can access it on the link below.
+
 **Ports Reference Guide**:
 - `6573` - Python Server & Web Application
 - `6574` - MCP Server
 - `6575` - LLM Server
+- `6576` - LLM Computer Screen
 
 ---
 
@@ -61,6 +64,7 @@ The `/ref` subdirectory contains documentation files relevant to the codebase.
 ## Quick Links
 
 [Web Application](http://127.0.0.1:6573)
+[Agent's Computer](http://localhost:6576/vnc.html?autoconnect=true&resize=scale)
 
 ---
-*Updated Oct 6, 2026 by Jadon Duff*
+*Updated Oct 7, 2026 by Jadon Duff*
