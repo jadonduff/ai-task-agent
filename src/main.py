@@ -28,7 +28,7 @@ from fastapi import FastAPI
 from pathlib import Path
 
 # ---- Setup -----------------------------------------------------------
-MODEL = "unsloth/Qwen3.8-27B-GGUF:Q8_K_XL"
+MODEL = "unsloth/Qwen3.5-0.8B-GGUF:Q4_K_XL"
 
 set_tracing_disabled(True)
 
