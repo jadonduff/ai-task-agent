@@ -31,25 +31,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
+# Set working directory for code
+WORKDIR /opt/ai-task-agent
 
 # Create virtual environment
 RUN python3.12 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+ENV PYTHONPATH="/opt/ai-task-agent"
 
 # Use the virtual environment by default
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python packages
-COPY requirements.txt .
-RUN pip install --no-cache-dir fastmcp==4.0.10
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Copy over code
-COPY src ./src
-COPY dockerfiles/mcp-server/start.sh /start.sh
-RUN chmod +x /start.sh
+COPY src/ /opt/ai-task-agent/src/
+COPY src/start.sh /start.sh
+RUN sed -i 's/\r$//' /start.sh && chmod +x /start.sh
+
+# Shared directory
+RUN mkdir -p /app/transfer
+
+# Where Agent spawns
+WORKDIR /app
+
 # Ports
-EXPOSE 6574 6576
+EXPOSE 6574 6575
 
 # Initialization
 CMD ["/start.sh"]

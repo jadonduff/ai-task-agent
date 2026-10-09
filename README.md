@@ -10,13 +10,13 @@
 
 For **MacOS Users**:
 - To **build** the application, run `make build`
-- To **start** the application, run `make run-mac`
-- To **stop** the application, run `make stop-mac`
+- To **start** the application, run `make runm`
+- To **stop** the application, run `make stopm`
 
 For **Windows**:
 - To **build** the application, run `make build`
-- To **start** the application, run `make run-windows`
-- To **stop** the application, run `make stop-windows`
+- To **start** the application, run `make runw`
+- To **stop** the application, run `make stopw`
 
 ---
 
@@ -37,19 +37,18 @@ LLAMA_MODEL_PATH=/Users/AI/.cache/huggingface/hub/Qwen3.8-27B-UD-Q8_K_XL.gguf
 
 ## Routes & Architecture
 
-The **frontend** is located in `src/frontend`. It is hosted by a Python-based FastAPI application, `main.py`, located in `src`. It lives in a Docker container called `ai-task-agent` that is spawned from the `make` commands on port `6573`.
+The **frontend** is hosted by `llama.cpp` on port `6573`.
 
 The **backend** is located in `src/backend`. It is hosted by a Python-based FastMCP application, `mcp_server.py`. It lives in a Docker container called `mcp-server` that is spawned from the `make` commands on port `6574`, using an `http` transport.
 
-The **Large Language Model (LLM)** is ran by the host computer using `llama-server`, which is a part of `llama.cpp`. This is the industry-standard way of hosting **LLMs** locally, and is not located in a Docker container as it needs native **GPU** acceleration. It lives on port `6575`.
+The **Large Language Model (LLM)** is ran by the host computer using `llama-server`, which is a part of `llama.cpp`. This is the industry-standard way of hosting **LLMs** locally, and is not located in a Docker container as it needs native **GPU** acceleration. It lives on port `6573`.
 
-The **Docker Screen** is ran by the MCP server container. You can access it on the link below.
+The **Docker Screen** is ran by the MCP server container. You can access it on the link below, and it is hosted on port `6574`.
 
 **Ports Reference Guide**:
-- `6573` - Python Server & Web Application
+- `6573` - LLM Server
 - `6574` - MCP Server
-- `6575` - LLM Server
-- `6576` - LLM Computer Screen
+- `6575` - Agent's Computer
 
 ---
 
@@ -64,7 +63,7 @@ The `/ref` subdirectory contains documentation files relevant to the codebase.
 ## Quick Links
 
 [Web Application](http://127.0.0.1:6573)
-[Agent's Computer](http://localhost:6576/vnc.html?autoconnect=true&resize=scale)
+[Agent's Computer](http://localhost:6574/vnc.html?autoconnect=true&resize=scale)
 
 ---
-*Updated Oct 7, 2026 by Jadon Duff*
+*Updated Oct 9, 2026 by Jadon Duff*

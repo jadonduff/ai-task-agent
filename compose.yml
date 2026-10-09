@@ -2,9 +2,9 @@
 # ----------------------------------------------------------------------
 # Title    : AI Task Agent Docker Compose Configuration
 # Owner    : Jadon Duff
-# Authors  : Jadon Duff, Claude
+# Authors  : Jadon Duff, Claude, ChatGPT
 # Date     : 2026-10-02
-# Version  : v0.0.2
+# Version  : v0.0.3
 # Project  : AI Task Agent
 # Software : Docker version 29.8.1
 # ----------------------------------------------------------------------
@@ -19,24 +19,9 @@ services:
   ai-task-agent:
     build:
       context: .
-      dockerfile: dockerfiles/web-server/Dockerfile
-    ports:
-      - "6573:6573"
-    depends_on:
-      mcp-server:
-        condition: service_healthy
-
-  mcp-server:
-    build:
-      context: .
-      dockerfile: dockerfiles/mcp-server/Dockerfile
+      dockerfile: src/Dockerfile
     ports:
       - "6574:6574"
-      - "127.0.0.1:6576:6576"
+      - "127.0.0.1:6575:6575"
     volumes:
-      - ./transfer:/transfer
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 6574), 2)"]
-      interval: 2s
-      timeout: 3s
-      retries: 15
+      - ./transfer:/app/transfer

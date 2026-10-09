@@ -3,7 +3,8 @@
 llama-server \
   -m "$LLAMA_MODEL_PATH" \
   --host 127.0.0.1 \
-  --port 6575 \
+  --port 6573 \
+  --webui-mcp-proxy \
   -c 100000 \
   -ctk f16 \
   -ctv f16 \

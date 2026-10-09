@@ -15,22 +15,19 @@
 #   None.
 # ----------------------------------------------------------------------
 
-.PHONY: build run stop clean rebuild
+.PHONY: build runm runw stopm stopw
 
 build:
 	docker compose build
 
-run-mac:
+runm:
 	./scripts/run-llm-mac.sh & docker compose up
 
-# make windows will run the application for Windows
-# TODO: create Windows llama-cli script
-run-windows:
-	start /B cmd /c "scripts\run-llm-windows.bat" & docker compose up
-
-stop-mac:
+stopm:
 	./scripts/stop-llm-mac.sh & docker compose down
 
-# TODO: make Windows stop script
-stop-windows:
+runw:
+	start /B cmd /c "scripts\run-llm-windows.bat" & docker compose up
+
+stopw:
 	cmd /c "scripts\stop-llm-windows.bat" & docker compose down

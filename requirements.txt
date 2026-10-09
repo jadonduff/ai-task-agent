@@ -1,5 +1,1 @@
-fastapi==0.141.1
-uvicorn==0.44.0
-python-multipart==0.0.28
-openai-agents==0.17.2
-openai==2.44.0
+fastmcp==4.0.10
