@@ -14,21 +14,36 @@ References: None.
 <!DOCTYPE html>
 
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>AI Task Agent</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/icon.svg">
 </head>
 
 <body>
-    <h1>AI Task Agent</h1>
+    <div class="flex-container">
+        <div class="column">
+            <h2>Column A</h2>
+            <p>Content goes here...</p>
+        </div>
+        <div class="column">
+            <h2>Column B</h2>
+            <form id="prompt-form">
+                <input id="prompt" type="text" placeholder="Enter a prompt..." size="50" required>
+                <button type="submit">Send</button>
+            </form>
 
-    <form id="prompt-form">
-        <input id="prompt" type="text" placeholder="Enter a prompt..." size="50" required>
-        <button type="submit">Send</button>
-    </form>
-
-    <pre id="output"></pre>
+            <pre id="output"></pre>
+        </div>
+        <div class="column">
+            <h2>Column C</h2>
+            <p>Content goes here...</p>
+        </div>
+    </div>
 
     <script src="/static/script.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+<defs>
+  <linearGradient id="mainGradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="800" y2="800">
+    <stop offset="0%" stop-color="#3AF2F2" />
+    <stop offset="100%" stop-color="#C40CF0" />
+  </linearGradient>
+  <linearGradient id="ringGradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="800" y2="800">
+    <stop offset="0%" stop-color="#248D97" />
+    <stop offset="100%" stop-color="#700E96" />
+  </linearGradient>
+</defs>
+<line x1="400.00" y1="400.00" x2="400.00" y2="140.00" stroke="url(#mainGradient)" stroke-linecap="round" stroke-width="16" />
+<line x1="400.00" y1="400.00" x2="625.17" y2="270.00" stroke="url(#mainGradient)" stroke-linecap="round" stroke-width="16" />
+<line x1="400.00" y1="400.00" x2="625.17" y2="530.00" stroke="url(#mainGradient)" stroke-linecap="round" stroke-width="16" />
+<line x1="400.00" y1="400.00" x2="400.00" y2="660.00" stroke="url(#mainGradient)" stroke-linecap="round" stroke-width="16" />
+<line x1="400.00" y1="400.00" x2="174.83" y2="530.00" stroke="url(#mainGradient)" stroke-linecap="round" stroke-width="16" />
+<line x1="400.00" y1="400.00" x2="174.83" y2="270.00" stroke="url(#mainGradient)" stroke-linecap="round" stroke-width="16" />
+<line x1="400.00" y1="140.00" x2="625.17" y2="270.00" stroke="url(#ringGradient)" stroke-linecap="round" stroke-width="8" />
+<line x1="625.17" y1="270.00" x2="625.17" y2="530.00" stroke="url(#ringGradient)" stroke-linecap="round" stroke-width="8" />
+<line x1="625.17" y1="530.00" x2="400.00" y2="660.00" stroke="url(#ringGradient)" stroke-linecap="round" stroke-width="8" />
+<line x1="400.00" y1="660.00" x2="174.83" y2="530.00" stroke="url(#ringGradient)" stroke-linecap="round" stroke-width="8" />
+<line x1="174.83" y1="530.00" x2="174.83" y2="270.00" stroke="url(#ringGradient)" stroke-linecap="round" stroke-width="8" />
+<line x1="174.83" y1="270.00" x2="400.00" y2="140.00" stroke="url(#ringGradient)" stroke-linecap="round" stroke-width="8" />
+<polygon points="400.00,265.00 516.91,332.50 516.91,467.50 400.00,535.00 283.09,467.50 283.09,332.50" fill="url(#mainGradient)" />
+<polyline points="343.00,360.00 389.00,400.00 343.00,440.00" fill="none" stroke="#0A1128" stroke-width="15.00" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="411.00" y="432.00" width="46.00" height="13.00" rx="6.50" fill="#0A1128" />
+<circle cx="400.00" cy="140.00" r="42" fill="url(#mainGradient)" />
+<circle cx="625.17" cy="270.00" r="42" fill="url(#mainGradient)" />
+<circle cx="625.17" cy="530.00" r="42" fill="url(#mainGradient)" />
+<circle cx="400.00" cy="660.00" r="42" fill="url(#mainGradient)" />
+<circle cx="174.83" cy="530.00" r="42" fill="url(#mainGradient)" />
+<circle cx="174.83" cy="270.00" r="42" fill="url(#mainGradient)" />
+</svg>
