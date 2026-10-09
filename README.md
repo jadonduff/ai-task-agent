@@ -63,7 +63,7 @@ The `/ref` subdirectory contains documentation files relevant to the codebase.
 ## Quick Links
 
 [Web Application](http://127.0.0.1:6573)
-[Agent's Computer](http://localhost:6574/vnc.html?autoconnect=true&resize=scale)
+[Agent's Computer](http://localhost:6575/vnc.html?autoconnect=true&resize=scale)
 
 ---
 *Updated Oct 9, 2026 by Jadon Duff*
