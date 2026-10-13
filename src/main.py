@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 # Title    : AI Task Agent MCP Server
 # Owner    : Jadon Duff
-# Authors  : Jadon Duff
+# Authors  : Jadon Duff, AI Task Agent, ChatGPT, Claude
 # Date     : 2026-10-02
 # Version  : v0.0.2
 # Project  : AI Task Agent
@@ -18,14 +18,24 @@
 
 # ---- Libraries -------------------------------------------------------
 from fastmcp import FastMCP
+from mcp.types import ImageContent
 
 from datetime import datetime, timezone, date
+from pathlib import Path
 import urllib.request
+import contextlib
 import subprocess
+import traceback
+import mimetypes
 import socket
+import base64
+import uuid
+import io
+import os
+
 
 # ---- MCP -------------------------------------------------------
-mcp = FastMCP("Demo 🚀")
+mcp = FastMCP("AI Task Agent")
 
 
 @mcp.tool
@@ -66,7 +76,7 @@ def get_environment_info() -> str:
 
 
 @mcp.tool
-def execute_command(command: str, timeout: int = 60) -> str:
+def execute_command(command: str, timeout: int = 60) -> dict:
     """Executes a terminal command.
     
     Executes a shell command (bash -c) on the shared Docker container;
@@ -77,11 +87,91 @@ def execute_command(command: str, timeout: int = 60) -> str:
         timeout (int): The time in seconds permitted for the command to run; defaults to 60 seconds. Optional.
     
     Returns:
-        str: The exit code, standard out, and standard error after the command runs.
+        dict: A dictionary containing the exit code, standard output, and standard error after the command runs.
     """
     cmd = ["bash", "-c", command]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-    return f"exit_code: {r.returncode}\nstdout:\n{r.stdout}\nstderr:\n{r.stderr}"
+    return {
+        "exit_code": r.returncode,
+        "stdout": r.stdout,
+        "stderr": r.stderr
+    }
+
+
+@mcp.tool
+def execute_python(code: str) -> dict:
+    """Runs the given Python code.
+    
+    Executes the given arbitrary code string using `exec()` in Python 3.12 and returns its output.
+
+    Args:
+        code (str): The Python code to execute.
+
+    Returns:
+        dict: A dictionary containing the standard output, standard error, and a boolean signaling if the code executed successfully.
+    """
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+
+    try:
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            exec(code)
+
+        return {
+            "stdout": stdout.getvalue(),
+            "stderr": stderr.getvalue(),
+            "success": True,
+        }
+    except Exception:
+        return {
+            "stdout": stdout.getvalue(),
+            "stderr": stderr.getvalue() + traceback.format_exc(),
+            "success": False,
+        }
+
+
+@mcp.tool
+def take_screenshot() -> str:
+    """Takes a screenshot of the current display.
+
+    Uses scrot to capture a screenshot of the current active display and saves it to the `/transfer` folder.
+
+    Args:
+        None
+    
+    Returns:
+        str: The path the image was saved to.
+    """
+    path = os.path.join("/app", "transfer", f"screenshot-{uuid.uuid4()}.png")
+
+    result = subprocess.run(["scrot", path], env={**os.environ, "DISPLAY": ":99"}, text=True, timeout=10, capture_output=True)
+
+    if result.returncode != 0 or not os.path.exists(path):
+        raise RuntimeError(f"Screenshot failed: {result.stderr.strip() or 'no output file'}")
+
+    return f"Screenshot saved at {path}"
+
+
+@mcp.tool
+def see(path: str) -> ImageContent:
+    """Lets you see an image.
+
+    Returns the specified image at the given path as ImageContent, allowing you to ingest the image as vision.
+
+    Args:
+        path (str): The path to the desired image to see.
+
+    Returns:
+        ImageContent: the content of the image at the specified path (or None if the path does not exist).
+    """
+
+    p = Path(path)
+    if not p.is_file():
+        raise ValueError(f"No such file: {path}")
+
+    mime = mimetypes.guess_type(p.name)[0] or "image/png"
+    data = base64.b64encode(p.read_bytes()).decode("ascii")
+    return ImageContent(type="image", data=data, mimeType=mime)
 
 if __name__ == "__main__":
     mcp.run()

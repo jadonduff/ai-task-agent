@@ -1,1 +1,60 @@
+# Model Context Protocol
 fastmcp==4.0.10
+
+# HTTP and web
+requests==2.34.2
+httpx==0.28.1
+beautifulsoup4==4.14.2
+lxml==6.0.2
+
+# Numerical computing and scientific tools
+numpy==2.2.6
+scipy==1.18.1
+sympy==1.14.0
+numba==0.62.1
+
+# Data processing
+pandas==3.0.6
+polars==1.34.0
+pyarrow==21.0.0
+duckdb==1.5.6
+openpyxl==3.1.5
+
+# Machine learning
+scikit-learn==1.9.1
+
+# Image processing and visualization
+Pillow==12.3.0
+opencv-python-headless==4.12.0.88
+matplotlib==3.10.7
+
+# Documents
+PyMuPDF==1.28.2
+pypdf==6.1.1
+python-docx==1.2.0
+python-pptx==1.0.2
+
+# NLP and embeddings
+transformers==5.19.0
+tokenizers==0.23.1
+sentence-transformers==6.1.0
+nltk==3.9.2
+rapidfuzz==3.14.1
+
+# Structured data and validation
+pydantic==2.14.1
+jsonschema==4.25.1
+orjson==3.11.3
+PyYAML==6.0.3
+
+# Files, archives, and system inspection
+python-magic==0.4.27
+py7zr==1.0.0
+psutil==7.1.0
+watchdog==6.0.0
+
+# General utilities
+rich==15.0.0
+tenacity==9.1.2
+python-dateutil==2.9.0.post0
+networkx==3.5
