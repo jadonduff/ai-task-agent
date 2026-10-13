@@ -131,16 +131,17 @@ def execute_python(code: str) -> dict:
 
 
 @mcp.tool
-def take_screenshot() -> str:
-    """Takes a screenshot of the current display.
+def take_screenshot() -> ImageContent:
+    """Takes a screenshot of the current display and allows you to see it.
 
-    Uses scrot to capture a screenshot of the current active display and saves it to the `/transfer` folder.
+    Uses scrot to capture a screenshot of the current active display and returns to you.
+    Also saves it to the `/app/transfer` folder.
 
     Args:
         None
-    
+
     Returns:
-        str: The path the image was saved to.
+        ImageContent: an image of the current display.
     """
     path = os.path.join("/app", "transfer", f"screenshot-{uuid.uuid4()}.png")
 
@@ -149,7 +150,13 @@ def take_screenshot() -> str:
     if result.returncode != 0 or not os.path.exists(path):
         raise RuntimeError(f"Screenshot failed: {result.stderr.strip() or 'no output file'}")
 
-    return f"Screenshot saved at {path}"
+    p = Path(path)
+    if not p.is_file():
+        raise ValueError(f"No such file: {path}")
+
+    mime = mimetypes.guess_type(p.name)[0] or "image/png"
+    data = base64.b64encode(p.read_bytes()).decode("ascii")
+    return ImageContent(type="image", data=data, mimeType=mime)
 
 
 @mcp.tool
