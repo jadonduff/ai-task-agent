@@ -6,13 +6,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:99
 
 # Install packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --install-suggests \
+    hyperspec- \
     python3.12 \
     python3.12-venv \
     python3-pip \
     build-essential \
     cmake \
     git \
+    curl \
+    wget \
+    ca-certificates \
     xvfb \
     x11vnc \
     openbox \
@@ -30,6 +34,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xdg-utils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Download Firefox
+RUN install -d -m 0755 /etc/apt/keyrings \
+&& wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O /etc/apt/keyrings/packages.mozilla.org.asc \
+&& echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" > /etc/apt/sources.list.d/mozilla.list \
+&& printf 'Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000\n' > /etc/apt/preferences.d/mozilla \
+&& apt-get update \
+&& apt-get install -y --allow-downgrades firefox \
+&& apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set working directory for code
 WORKDIR /opt/ai-task-agent
