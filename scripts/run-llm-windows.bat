@@ -4,7 +4,7 @@ llama-server.exe ^
   -m "%LLAMA_MODEL_PATH%" ^
   --host 0.0.0.0 ^
   --port 6573 ^
-  --webui-mcp-proxy \
+  --webui-mcp-proxy ^
   -c 100000 ^
   -ctk f16 ^
   -ctv f16 ^
