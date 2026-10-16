@@ -54,6 +54,9 @@ ENV PYTHONPATH="/opt/ai-task-agent"
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
+# Download Playwright browsers and OS dependencies
+RUN playwright install --with-deps chromium
+
 # Copy over code
 COPY src/ /opt/ai-task-agent/src/
 COPY src/start.sh /start.sh

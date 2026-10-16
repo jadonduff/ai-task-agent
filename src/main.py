@@ -19,6 +19,7 @@
 # ---- Libraries -------------------------------------------------------
 from fastmcp import FastMCP
 from mcp.types import ImageContent
+from playwright.sync_api import sync_playwright
 
 from datetime import datetime, timezone, date
 from pathlib import Path
@@ -179,6 +180,71 @@ def see(path: str) -> ImageContent:
     mime = mimetypes.guess_type(p.name)[0] or "image/png"
     data = base64.b64encode(p.read_bytes()).decode("ascii")
     return ImageContent(type="image", data=data, mimeType=mime)
+
+# tool requires from playwright.sync_api import sync_playwright
+@mcp.tool
+def browser(websitelink: str) -> dict:
+    """Extracts the ARIA (Accessible Rich Internet Applications) snapshot and actionable elements from the given website hyperlink.
+    
+    Gives the ARIA snapshot and actionable elements using the playwright python library.
+
+    Args:
+        websitelink (str): The website hyperlink to view.
+
+    Returns:
+        dict: A dictionary containing the ARIA snapshot (key "aria_snap") and actionable elements (key "interactive") on the website.
+    """
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(websitelink)
+
+        page.wait_for_load_state('networkidle')
+
+        # reading context
+        a11y_tree = page.aria_snapshot()
+
+        # actionable context
+        interactive_elements = page.evaluate("""() => {
+            const selectors = 'a, button, input, select, textarea, [role="button"]';
+            const elements = document.querySelectorAll(selectors);
+            
+            let interactables = [];
+            let index = 0;
+
+            elements.forEach((el) => {
+                if (el.offsetWidth === 0 || el.offsetHeight === 0) return;
+                
+                const text = el.innerText?.trim() || el.value?.trim() || el.placeholder || el.getAttribute('aria-label') || '';
+                if (!text && el.tagName !== 'INPUT') return;
+
+                interactables.push({
+                    id: index++,
+                    tag: el.tagName.toLowerCase(),
+                    type: el.type || undefined,
+                    text: text,
+                });
+            });
+            return interactables;
+        }""")
+        browser.close()
+
+    # interactables string
+    intst = ""
+
+    for item in interactive_elements[:10]:
+        tag_info = f"<{item['tag']}"
+        if item.get('type'):
+            tag_info += f" type='{item['type']}"
+        tag_info += ">"
+
+        intst += f"[{item['id']}] {tag_info} {item['text']}\n"
+
+    return {
+    "aria_snap": a11y_tree,
+    "interactive": intst
+    }
+        
 
 if __name__ == "__main__":
     mcp.run()
