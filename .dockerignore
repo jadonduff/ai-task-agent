@@ -1,0 +1,22 @@
+# ---- Environment
+.env
+
+# ---- Python
+__pycache__/
+*.pyc
+.venv/
+
+# ---- OS Dev
+.vscode/
+.DS_Store
+
+# ---- Scratch
+settings.json
+untracked.txt
+
+# ---- Models
+*.gguf
+
+# ---- Transfer
+transfer/*
+!transfer/data.txt

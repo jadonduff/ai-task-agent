@@ -6,11 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:99
 
 # Install packages
-RUN apt-get update && apt-get install -y --install-suggests \
-    hyperspec- \
+RUN apt-get update && apt-get install -y \
     python3.12 \
     python3.12-venv \
-    python3-pip \
     build-essential \
     cmake \
     git \
@@ -19,7 +17,6 @@ RUN apt-get update && apt-get install -y --install-suggests \
     ca-certificates \
     xvfb \
     x11vnc \
-    openbox \
     xdotool \
     wmctrl \
     scrot \
@@ -32,6 +29,7 @@ RUN apt-get update && apt-get install -y --install-suggests \
     dbus-x11 \
     fonts-dejavu \
     xdg-utils \
+    libmagic1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -51,9 +49,6 @@ WORKDIR /opt/ai-task-agent
 RUN python3.12 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONPATH="/opt/ai-task-agent"
-
-# Use the virtual environment by default
-ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python packages
 COPY requirements.txt /tmp/requirements.txt

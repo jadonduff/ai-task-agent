@@ -22,15 +22,6 @@ For **Windows**:
 
 ## Setup
 
-While in the **development phase**, this application requires an environment file.
-
-This file should be placed in the **root** of the source code and be named `.env`. It is **untracked** by **Git**, so each developer/tester will need their own.
-
-Example `.env`:
-```
-LLAMA_MODEL_PATH=/Users/AI/.cache/huggingface/hub/Qwen3.8-27B-UD-Q8_K_XL.gguf
-```
-
 **Note**: Currently, `llama.cpp` does not automatically install. You will need to manually install `llama.cpp` which comes with `llama-server`.
 
 ---
@@ -63,7 +54,8 @@ The `/ref` subdirectory contains documentation files relevant to the codebase.
 ## Quick Links
 
 [Web Application](http://127.0.0.1:6573)
+
 [Agent's Computer](http://localhost:6575/vnc.html?autoconnect=true&resize=scale)
 
 ---
-*Updated Oct 9, 2026 by Jadon Duff*
+*Updated Oct 16, 2026 by Jadon Duff*
