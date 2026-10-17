@@ -54,10 +54,15 @@ ENV PYTHONPATH="/opt/ai-task-agent"
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
+# Download Playwright browsers and OS dependencies
+RUN playwright install --with-deps chromium
+
 # Copy over code
 COPY src/ /opt/ai-task-agent/src/
 COPY src/start.sh /start.sh
 RUN sed -i 's/\r$//' /start.sh && chmod +x /start.sh
+
+COPY src/assets/wallpaper.png /usr/share/backgrounds/ata-wallpaper.png
 
 # Shared directory
 RUN mkdir -p /app/transfer

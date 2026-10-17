@@ -1,0 +1,5 @@
+NAME
+Browser Workflow
+
+CONTENT
+The browser tool opens or navigates a visible, headed Chromium page on display :99. Use browser(url) to navigate, browser_inspect() to read the current page structure and visible controls, browser_click(role, name, index=0) to click by exact accessible role/name, browser_fill(label, value) to fill a uniquely labeled field, and browser_hover(role, name, index=0) for hover-triggered menus. Inspect again after meaningful interactions to verify the result. Use exact accessible names; index is zero-based for duplicates. Inspection IDs are descriptive, not reusable selectors. The browser persists across calls until closed or the MCP server restarts. It is separate from Firefox and does not share Firefox cookies. Use GUI tools for applications outside Chromium.
