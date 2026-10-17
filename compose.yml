@@ -25,6 +25,7 @@ services:
       - "127.0.0.1:6575:6575"
     volumes:
       - ./transfer:/app/transfer
+      - ./brain:/root/brain
     shm_size: "8gb"
     environment:
       - TZ=America/New_York

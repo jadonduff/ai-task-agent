@@ -62,6 +62,12 @@ RUN sed -i 's/\r$//' /start.sh && chmod +x /start.sh
 # Shared directory
 RUN mkdir -p /app/transfer
 
+# Scratch directory
+RUN mkdir -p /app/scratch
+
+# Brain directory
+RUN mkdir -p /root/brain
+
 # Where Agent spawns
 WORKDIR /app
 

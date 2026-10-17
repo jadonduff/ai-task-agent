@@ -20,3 +20,6 @@ untracked.txt
 # ---- Transfer
 transfer/*
 !transfer/data.txt
+
+# ---- Brain
+brain/*
