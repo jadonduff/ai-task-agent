@@ -27,9 +27,9 @@ stopm:
 	./scripts/stop-llm-mac.sh & docker compose down
 
 runw:
-	start /B cmd /c "scripts\run-llm-windows.bat"
+	cmd /c start /B "scripts\run-llm-windows.bat"
 	docker compose up -d --wait
-	start "" "http://127.0.0.1:6573"
+	cmd /c start "" "http://127.0.0.1:6573"
 	docker compose logs -f
 
 stopw:
