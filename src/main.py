@@ -134,6 +134,43 @@ def launch_app(command: str, wait_after: float = 2.0) -> str:
     return f"Launched {args[0]} (pid {p.pid})"
 
 
+@mcp.tool
+def get_processes(limit: int = 20) -> str:
+    """Lists running processes in the container.
+    Use to inspect active applications, identify resource-intensive processes, and troubleshoot unresponsive programs. Results are sorted by CPU usage.
+
+    Args:
+        limit: Maximum number of processes to return (default: 20, maximum: 100).
+
+    Returns:
+        A text listing of process IDs, parent IDs, status, CPU and memory usage, runtime, and command.
+    """
+    if not 1 <= limit <= 100:
+        raise ValueError("limit must be between 1 and 100")
+
+    result = subprocess.run(
+        [
+            "ps", "-ww", "-eo",
+            "pid,ppid,stat,pcpu,pmem,etime,comm,args",
+            "--sort=-pcpu"
+        ],
+        capture_output=True,
+        text=True,
+        timeout=10
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or "Failed to list processes")
+
+    lines = result.stdout.splitlines()
+    output = lines[:limit + 1]
+
+    if len(lines) > limit + 1:
+        output.append(f"... limited to {limit} processes.")
+
+    return "\n".join(output)
+
+
 # ---- Screen & Input --------------------------------------------------
 @mcp.tool
 def take_screenshot(save: bool = False) -> ImageContent:
