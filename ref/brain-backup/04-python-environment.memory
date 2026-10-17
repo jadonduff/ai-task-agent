@@ -1,0 +1,5 @@
+NAME
+Python Environment
+
+CONTENT
+The primary Python runtime is Python 3.12 in the virtual environment /opt/venv, which should be first on PATH. Use the environment's python and pip rather than assuming system Python is active. Check the actual interpreter, installed packages, and command availability when a script fails or a dependency is uncertain.

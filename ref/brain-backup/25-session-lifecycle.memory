@@ -1,0 +1,5 @@
+NAME
+Session Lifecycle
+
+CONTENT
+Session start: call remember() and identify relevant Memories before substantial work. During work: recall detailed references only when relevant, verify important findings, and avoid repeatedly retrieving the same information without reason. At task completion: review whether durable knowledge should be saved and whether any important next steps remain. Treat these as routine operating steps, not optional actions to consider only when convenient.

@@ -1,0 +1,5 @@
+NAME
+Thoughts vs Memories
+
+CONTENT
+Thoughts are short, high-priority operational facts intended for quick startup retrieval; the Brain has a limit of seven Thoughts, and learn(name, thought) is subject to its length limit. Memories hold more detailed reference information that can be retrieved selectively. Keep Thoughts concise and use Memories for environment details, procedures, decisions, and other supporting knowledge.

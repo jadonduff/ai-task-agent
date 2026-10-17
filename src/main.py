@@ -53,19 +53,18 @@ def xdo(*args):
 mcp = FastMCP("AI Task Agent")
 
 
+# ---- Execution -------------------------------------------------------
 @mcp.tool
 def execute_command(command: str, timeout: int = 60) -> dict:
-    """Executes a terminal command.
-    
-    Executes a shell command (bash -c) on the shared Docker container;
-    returns stdout, stderr, and exit code.
+    """Runs a shell command in the container and captures its result.
+    Use for command-line operations, system utilities, and shell scripts.
 
     Args:
-        command (str): The command to execute on the machine.
-        timeout (int): The time in seconds permitted for the command to run; defaults to 60 seconds. Optional.
-    
+        command: The shell command to execute.
+        timeout: Maximum runtime in seconds (default: 60).
+
     Returns:
-        dict: A dictionary containing the exit code, standard output, and standard error after the command runs.
+        A dictionary containing the exit code, standard output, and standard error.
     """
     cmd = ["bash", "-c", command]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
@@ -78,15 +77,14 @@ def execute_command(command: str, timeout: int = 60) -> dict:
 
 @mcp.tool
 def execute_python(code: str) -> dict:
-    """Runs the given Python code.
-    
-    Executes the given arbitrary code string using `exec()` in Python 3.12 and returns its output.
+    """Executes Python code in the server's Python environment.
+    Use for calculations, data processing, scripting, and programmatic operations.
 
     Args:
-        code (str): The Python code to execute.
+        code: The Python code to execute.
 
     Returns:
-        dict: A dictionary containing the standard output, standard error, and a boolean signaling if the code executed successfully.
+        A dictionary containing standard output, standard error, and success status.
     """
     stdout = io.StringIO()
     stderr = io.StringIO()
@@ -109,18 +107,44 @@ def execute_python(code: str) -> dict:
 
 
 @mcp.tool
-def take_screenshot(save: bool = False) -> ImageContent:
-    """Takes a screenshot of the current display and allows you to see it.
-
-    Uses scrot to capture a screenshot of the current active display and returns to you.
-    For quick checks or visuals of the display, don't save the image.
-    Otherwise, optionally, saves it to `/app/transfer/screenshots`
+def launch_app(command: str, wait_after: float = 2.0) -> str:
+    """Launches a program in the background.
+    Use for graphical applications or long-running processes that should continue after the tool returns. Process output is logged to /tmp/launch.log.
 
     Args:
-        save (bool): Whether to save the image (True) or not (False); defaults to False. Optional.
+        command: The program to launch and its arguments.
+        wait_after: Seconds to wait before checking the launch (default: 2.0).
 
     Returns:
-        ImageContent: an image of the current display.
+        A message describing the launch result and process ID.
+    """
+    args = shlex.split(command)
+    log = open("/tmp/launch.log", "ab")
+    try:
+        p = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+    except FileNotFoundError:
+        raise ValueError(f"Program not found: {args[0]}")
+    finally:
+        log.close()
+
+    time.sleep(wait_after)
+    code = p.poll()
+    if code not in (None, 0):
+        raise RuntimeError(f"{args[0]} exited with code {code}; see /tmp/launch.log")
+    return f"Launched {args[0]} (pid {p.pid})"
+
+
+# ---- Screen & Input --------------------------------------------------
+@mcp.tool
+def take_screenshot(save: bool = False) -> ImageContent:
+    """Captures and returns an image of the virtual computer's display.
+    Use to inspect the current screen, verify visual changes, or identify interface elements. Screenshots are temporary unless saved.
+
+    Args:
+        save: Whether to save the image under /app/transfer/screenshots (default: False).
+
+    Returns:
+        An image of the current display.
     """
     if save:
         path = os.path.join("/app", "transfer", "screenshots", f"screenshot-{uuid.uuid4()}.png")
@@ -145,17 +169,15 @@ def take_screenshot(save: bool = False) -> ImageContent:
 
 @mcp.tool
 def see(path: str) -> ImageContent:
-    """Lets you see an image.
-
-    Returns the specified image at the given path as ImageContent, allowing you to ingest the image as vision.
+    """Loads an image from a file for visual inspection.
+    Use to examine existing screenshots, graphics, or other supported image files without opening them in a graphical application.
 
     Args:
-        path (str): The path to the desired image to see.
+        path: The path to the image file.
 
     Returns:
-        ImageContent: The content of the image at the specified path (or None if the path does not exist).
+        The image content for visual analysis.
     """
-
     p = Path(path)
     if not p.is_file():
         raise ValueError(f"No such file: {path}")
@@ -166,18 +188,131 @@ def see(path: str) -> ImageContent:
 
 
 @mcp.tool
-def remember() -> TextContent:
-    """Retrieves your Thoughts. MUST be called before beginning your response.
-
-    Remembers your stored Thoughts in your Brain, and a list of Memories.
-    You MUST run this before your first response and whenever you need a reminder of essential information.
-    Thoughts are short, essential tidbits of information you have deemed essential or extremely useful.
+def click(x: int, y: int, button: str = "left", clicks: int = 1, wait_after: float = 0.5) -> str:
+    """Clicks a position on the virtual computer's display.
+    Use for interacting with buttons, links, menus, and other visual controls. Coordinates originate at the top-left of the 1280x800 screen.
 
     Args:
-        None
+        x: Horizontal screen coordinate.
+        y: Vertical screen coordinate.
+        button: Mouse button (left, middle, or right; default: left).
+        clicks: Number of clicks (default: 1).
+        wait_after: Seconds to wait afterward (default: 0.5).
 
-    Return:
-        TextContent: the text of your Thoughts.
+    Returns:
+        A message describing the performed click.
+    """
+    if not (0 <= x < W and 0 <= y < H):
+        raise ValueError(f"({x}, {y}) is outside the {W}x{H} screen")
+    if button not in BUTTONS:
+        raise ValueError("button must be left, middle, or right")
+    xdo("mousemove", "--sync", str(x), str(y))
+    time.sleep(0.1)  # let hover effects register
+    xdo("click", "--repeat", str(clicks), "--delay", "50", BUTTONS[button])
+    time.sleep(wait_after)
+    return f"{button} clicked {clicks}x at ({x}, {y})"
+
+
+@mcp.tool
+def scroll(x: int, y: int, direction: str, amount: int = 3, wait_after: float = 0.3) -> str:
+    """Scrolls the virtual computer's display at a specified position.
+    Use to navigate webpages, menus, and documents beyond the visible area.
+
+    Args:
+        x: Horizontal screen coordinate.
+        y: Vertical screen coordinate.
+        direction: Scroll direction, either 'up' or 'down'.
+        amount: Number of scroll steps (default: 3, maximum: 20).
+        wait_after: Seconds to wait afterward (default: 0.3).
+
+    Returns:
+        A message describing the performed scroll.
+    """
+    if not (0 <= x < W and 0 <= y < H):
+        raise ValueError(f"({x}, {y}) is outside the {W}x{H} screen")
+
+    if direction not in ("up", "down"):
+        raise ValueError("direction must be 'up' or 'down'")
+
+    if not 1 <= amount <= 20:
+        raise ValueError("amount must be between 1 and 20")
+
+    if wait_after < 0:
+        raise ValueError("wait_after cannot be negative")
+
+    xdo("mousemove", "--sync", str(x), str(y))
+    xdo(
+        "click", "--repeat", str(amount), "--delay", "50",
+        "4" if direction == "up" else "5"
+    )
+    time.sleep(wait_after)
+
+    return f"Scrolled {direction} {amount} steps at ({x}, {y})"
+
+
+@mcp.tool
+def type_text(text: str, wait_after: float = 0.3) -> str:
+    """Types literal text into the currently focused application.
+    Use for entering text into fields, editors, terminals, and other interfaces. Use press_keys for keyboard shortcuts or special keys.
+
+    Args:
+        text: The text to type.
+        wait_after: Seconds to wait afterward (default: 0.3).
+
+    Returns:
+        A message reporting the number of characters typed.
+    """
+    xdo("type", "--delay", "15", "--", text)
+    time.sleep(wait_after)
+    return f"Typed {len(text)} characters"
+
+
+@mcp.tool
+def press_keys(keys: list[str], wait_after: float = 0.3) -> str:
+    """Presses keyboard keys or key combinations in sequence.
+    Use for shortcuts, navigation, editing, and special keys. Combine modifiers with +, such as ctrl+l, and use type_text for literal text.
+
+    Args:
+        keys: Ordered list of keys or key combinations.
+        wait_after: Seconds to wait afterward (default: 0.3).
+
+    Returns:
+        A message describing the keys pressed.
+    """
+    fixed = [
+        "+".join(ALIASES.get(p.lower(), p) for p in k.split("+")) for k in keys
+    ]
+    xdo("key", "--", *fixed)
+    time.sleep(wait_after)
+    return f"Pressed {', '.join(fixed)}"
+
+
+@mcp.tool
+def delay(milliseconds: int) -> str:
+    """Pauses execution for a specified duration.
+    Use to allow applications, menus, pages, or other operations time to finish before continuing.
+
+    Args:
+        milliseconds: The duration to wait, in milliseconds.
+
+    Returns:
+        A message confirming the requested delay.
+    """
+    time.sleep(milliseconds / 1000)
+    return f"Waited {milliseconds} milliseconds."
+
+
+# ---- Brain -----------------------------------------------------------
+@mcp.tool
+def remember() -> TextContent:
+    """Retrieves stored Thoughts and lists available Memory names.
+    Use at session startup to load essential context, or whenever you need to review your persistent knowledge.
+
+    Args:
+        None.
+
+    Returns:
+        Text containing all Thoughts and the names of available Memories.
     """
     thoughts = []
     memories = []
@@ -196,26 +331,27 @@ def remember() -> TextContent:
                 name = os.path.splitext(file)[0]
                 memories.append(name)
 
-    out = "# Thoughts:\n" + "\n\n".join(thoughts) + "\n\n\n# Memories:\n" + "\n".join(memories)
+    if not thoughts and not memories:
+        return TextContent(
+            type="text",
+            text="Your Brain is empty. Create a Thought or Memory."
+        )
 
-    return TextContent(type="text", text=out or "You have no Thoughts! Make one.")
+    out = "# Thoughts:\n" + "\n\n".join(thoughts) + "\n\n\n# Memories:\n" + "\n".join(memories)
+    return TextContent(type="text", text=out)
 
 
 @mcp.tool
 def learn(name: str, thought: str) -> str:
-    """Remembers a Thought. Use this to remember short, useful information.
-
-    Adds a new Thought to your Brain (as a short string). These persist between sessions.
-    You should run this whenever you need to remember essential information. For example, the User's name.
-    You can store a maximum of seven Thoughts; each Thought can be a maximum of 500 characters.
-    You SHOULD learn a Thought or Memorize a Memory after each response, if applicable.
+    """Creates a short, persistent Thought in the Brain.
+    Use for essential facts, preferences, and ongoing tasks that should be readily available across sessions. A maximum of seven Thoughts is allowed.
 
     Args:
-        name (str): The name of your Thought (maximum 20 characters).
-        thought (str): The Thought to add to your Brain (maximum 500 characters).
+        name: The Thought name (maximum 20 characters).
+        thought: The Thought content (maximum 500 characters).
 
-    Return:
-        str: A short message if the Thought was added to your Brain.
+    Returns:
+        A message describing whether the Thought was saved.
     """
     if len(name) > 20:
         return f"Name must be less than 20 Characters, yours was {len(name)}."
@@ -238,10 +374,14 @@ def learn(name: str, thought: str) -> str:
 
 @mcp.tool
 def purge(name: str) -> str:
-    """Removes a Thought.
-    
-    Removes a Thought from your Brain, if it exists.
-    You can use this to free up more space for your maximum of 7 Thoughts.
+    """Deletes a stored Thought from the Brain.
+    Use to remove outdated or unnecessary Thoughts and free a slot when the seven-Thought limit is reached.
+
+    Args:
+        name: The name of the Thought to delete.
+
+    Returns:
+        A message describing whether the Thought was deleted.
     """
     path = f"/root/brain/{name}.engram"
 
@@ -254,17 +394,14 @@ def purge(name: str) -> str:
 
 @mcp.tool
 def recall(memory: str) -> str:
-    """Retrieves a Memory.
-
-    Remembers a stored Memory from your Brain.
-    You can run this to remember a longer, more complex piece of information you noted from another session.
-    Memories are longer, useful information you have deemed worth saving for future sessions.
+    """Retrieves the full content of a stored Memory.
+    Use when you need detailed information from a previous session or a specific reference entry identified by name.
 
     Args:
-        memory (str): The name of the Memory to recall.
+        memory: The name of the Memory to retrieve.
 
-    Return:
-        str: the text of your Memory.
+    Returns:
+        The stored Memory content, or a message if it does not exist.
     """
     path = f"/root/brain/{memory}.memory"
 
@@ -277,19 +414,15 @@ def recall(memory: str) -> str:
 
 @mcp.tool
 def memorize(name: str, memory: str) -> str:
-    """Remembers a Memory. Use this to remember longer, useful information.
-
-    Adds a new Memory to your Brain. These persist between sessions.
-    You should run this whenever you need a reminder of useful information.
-    You can store unlimited Memories, and each Memory has an infinite size.
-    You SHOULD learn a Thought or Memorize a Memory after each response, if applicable.
+    """Creates a persistent Memory in the Brain.
+    Use for useful discoveries, procedures, decisions, and reference information that may be needed in future sessions. Memory names must be unique.
 
     Args:
-        name (str): The name of your Memory.
-        memory (str): The Memory to add to your Brain.
+        name: The name of the new Memory.
+        memory: The content to store.
 
-    Return:
-        str: A short message if the Memory was added to your Brain.
+    Returns:
+        A message describing whether the Memory was saved.
     """
     path = f"/root/brain/{name}.memory"
 
@@ -304,9 +437,14 @@ def memorize(name: str, memory: str) -> str:
 
 @mcp.tool
 def forget(name: str) -> str:
-    """Removes a Memory.
-    
-    Removes a Memory from your Brain, if it exists.
+    """Deletes a stored Memory from the Brain.
+    Use to remove obsolete or unnecessary reference information. This operation permanently removes the named Memory from the Brain directory.
+
+    Args:
+        name: The name of the Memory to delete.
+
+    Returns:
+        A message describing whether the Memory was deleted.
     """
     path = f"/root/brain/{name}.memory"
 
@@ -319,16 +457,14 @@ def forget(name: str) -> str:
 
 @mcp.tool
 def recollect() -> str:
-    """Lists all Memories.
-
-    Shows the names and a short preview of all stored Memories in your Brain.
-    Use this to find the name of a Memory you want to recall.
+    """Lists stored Memories with short content previews.
+    Use to find relevant Memory names before retrieving their full contents with recall(name).
 
     Args:
-        None
+        None.
 
-    Return:
-        str: A list of all Memory names with a brief preview.
+    Returns:
+        A list of Memory names and brief previews, or a message if none exist.
     """
     memories = []
 
@@ -346,155 +482,139 @@ def recollect() -> str:
     return "\n".join(memories) if memories else "You have no Memories yet."
 
 
+# ---- File Operations -------------------------------------------------
 @mcp.tool
-def delay(milliseconds: int) -> str:
-    """Waits for the specified amount of milliseconds.
-
-    Delays for a specified number of milliseconds, allowing you to pause your own token generation
-    or wait for computer actions to complete (for example, waiting for a menu to load).
+def list_files(path: str = "scratch", recursive: bool = False, limit: int = 100) -> str:
+    """Lists files and directories at a specified location.
+    Use to discover available files and inspect file sizes before reading or editing them.
 
     Args:
-        milliseconds (int): The time in milliseconds to delay.
+        path: 'scratch', 'transfer', or a directory path (default: 'scratch').
+        recursive: Whether to include nested contents (default: False).
+        limit: Maximum number of entries to return (default: 100, maximum: 500).
 
     Returns:
-        str: A message confirming the delay is complete
+        A text listing of names, entry types, and file sizes.
     """
-    time.sleep(milliseconds / 1000)
-    return f"Waited {milliseconds} milliseconds."
+    if not 1 <= limit <= 500:
+        raise ValueError("limit must be between 1 and 500")
 
+    if path == "scratch":
+        root = Path("/app/scratch")
+    elif path == "transfer":
+        root = Path("/app/transfer")
+    else:
+        root = Path(path).expanduser()
 
-@mcp.tool
-def click(x: int, y: int, button: str = "left", clicks: int = 1, wait_after: float = 0.5) -> str:
-    """Clicks on the virtual computer.
+    root = root.resolve()
 
-    Initiates a click at (x, y) on the 1280x800 virtual display, with origin located at the top left.
-    Supports left/right mouse simulation and double/triple clicks.
+    if not root.is_dir():
+        raise ValueError(f"Directory does not exist: {root}")
 
-    Args:
-        x (int): The x coordinate to click, from 0 (left) to 1280 (right).
-        y (int): The y coordinate to click, from 0 (top) to 800 (bottom).
-        button (str): Should be "left" or "middle" or "right"; defaults to "left". The type of click to perform (left, middle, or right click). Optional.
-        clicks (int): The number of clicks to perform (single, double, triple, etc.); defaults to 1. Optional.
-        wait_after (float): The number of seconds to wait after clicking, in case a delay is needed; defaults to 0.5. Optional.
-    
-    Returns:
-        str: A message confirming if the click executed correctly.
-    """
-    if not (0 <= x < W and 0 <= y < H):
-        raise ValueError(f"({x}, {y}) is outside the {W}x{H} screen")
-    if button not in BUTTONS:
-        raise ValueError("button must be left, middle, or right")
-    xdo("mousemove", "--sync", str(x), str(y))
-    time.sleep(0.1)  # let hover effects register
-    xdo("click", "--repeat", str(clicks), "--delay", "50", BUTTONS[button])
-    time.sleep(wait_after)
-    return f"{button} clicked {clicks}x at ({x}, {y})"
+    entries = sorted(
+        root.rglob("*") if recursive else root.iterdir(),
+        key=lambda p: str(p).casefold()
+    )
 
+    lines = []
 
-@mcp.tool
-def type_text(text: str, wait_after: float = 0.3) -> str:
-    """Types text from the keyboard.
-    
-    Simulates keypresses from the keyboard, typing the literal text string passed as a parameter.
-    Use the `press_keys` MCP tool if you need to use keys like TAB, ALT, etc.
+    for item in entries[:limit]:
+        try:
+            relative = item.relative_to(root)
+            if item.is_dir():
+                lines.append(f"[DIR]  {relative}/")
+            elif item.is_file():
+                size = item.stat().st_size
+                lines.append(f"[FILE] {relative} ({size} bytes)")
+        except OSError:
+            continue
 
-    Args:
-        text (str): The text to input into the computer.
-        wait_after (float): The number of seconds to wait after typing, in case a delay is needed; defaults to 0.3. Optional.
-    
-    Returns:
-        str: A message confirming if the text was typed correctly.
-    """
-    xdo("type", "--delay", "15", "--", text)
-    time.sleep(wait_after)
-    return f"Typed {len(text)} characters"
+    if not lines:
+        return f"No entries found in {root}."
+
+    if len(entries) > limit:
+        lines.append(f"... results limited to {limit} entries.")
+
+    return f"Directory: {root}\n" + "\n".join(lines)
 
 
 @mcp.tool
-def press_keys(keys: list[str], wait_after: float = 0.3) -> str:
-    """Presses keys or key combinations on the keyboard.
-
-    Simulates pressing named keys and shortcuts, in order. Each item in the list is one key
-    or one combination, with modifiers joined by "+" (e.g. "ctrl+shift+t"). Each item is
-    pressed and released before the next one starts.
-    Use the `type_text` MCP tool if you need to type literal text instead.
-
-    Key names follow X11 conventions and are case-sensitive for named keys. Available options:
-        - Modifiers: ctrl, shift, alt, super
-        - Editing: Return, BackSpace, Delete, Tab, space, Escape
-        - Navigation: Up, Down, Left, Right, Home, End, Page_Up, Page_Down
-        - Function keys: F1 through F12
-        - Letters, digits, and symbols: a-z, 0-9, and single characters like "/" or "-"
-        - Aliases accepted: Enter (Return), Esc (Escape), Backspace (BackSpace)
-
-    Examples:
-        ["Return"]                    Press Enter.
-        ["ctrl+l"]                    Focus the browser address bar.
-        ["alt+Tab"]                   Switch windows.
-        ["ctrl+a", "BackSpace"]       Select all, then delete.
-        ["Down", "Down", "Return"]    Move down twice, then confirm.
+def search_text(query: str, path: str = "scratch", glob: str = "*", limit: int = 20) -> str:
+    """Searches text files for a matching string.
+    Use to locate code, configuration, or information before reading or editing files. Results include file paths and line numbers.
 
     Args:
-        keys (list[str]): The keys or key combinations to press, in order.
-        wait_after (float): The number of seconds to wait after pressing, in case a delay is needed; defaults to 0.3. Optional.
+        query: The literal text to find (case-insensitive).
+        path: 'scratch', 'transfer', or a file or directory path (default: 'scratch').
+        glob: Filename pattern to filter files, such as '*.py' (default: '*').
+        limit: Maximum number of matching lines to return (default: 20, maximum: 100).
 
     Returns:
-        str: A message confirming which keys were pressed.
+        Matching file paths, line numbers, and text excerpts.
     """
-    fixed = [
-        "+".join(ALIASES.get(p.lower(), p) for p in k.split("+")) for k in keys
-    ]
-    xdo("key", "--", *fixed)
-    time.sleep(wait_after)
-    return f"Pressed {', '.join(fixed)}"
+    if not query:
+        raise ValueError("query cannot be empty")
 
+    if not 1 <= limit <= 100:
+        raise ValueError("limit must be between 1 and 100")
 
-@mcp.tool
-def launch_app(command: str, wait_after: float = 2.0) -> str:
-    """Launches a graphical or long-running program in the background.
+    if path == "scratch":
+        root = Path("/app/scratch")
+    elif path == "transfer":
+        root = Path("/app/transfer")
+    else:
+        root = Path(path).expanduser()
 
-    Starts the program detached from the tool call, returning immediately.
-    Use this for GUI apps or long-running programs intended for background use.
-    The program's output is written to /tmp/launch.log.
+    root = root.resolve()
 
-    Args:
-        command (str): The program and its arguments, e.g. "firefox https://example.com".
-        wait_after (float): The number of seconds to wait after launching so the window can appear; defaults to 2.0. Optional.
-    
-    Returns:
-        str: A message confirming the program started, or an error if it failed to start or exited immediately.
-    """
-    args = shlex.split(command)
-    log = open("/tmp/launch.log", "ab")
-    try:
-        p = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
-    except FileNotFoundError:
-        raise ValueError(f"Program not found: {args[0]}")
-    finally:
-        log.close()
+    if root.is_file():
+        files = [root]
+    elif root.is_dir():
+        files = sorted(
+            (p for p in root.rglob(glob) if p.is_file()),
+            key=lambda p: str(p).casefold()
+        )
+    else:
+        raise ValueError(f"Path does not exist: {root}")
 
-    time.sleep(wait_after)
-    code = p.poll()
-    if code not in (None, 0):
-        raise RuntimeError(f"{args[0]} exited with code {code}; see /tmp/launch.log")
-    return f"Launched {args[0]} (pid {p.pid})"
+    matches = []
+    query_folded = query.casefold()
+
+    for file_path in files:
+        try:
+            with file_path.open("r", encoding="utf-8") as file:
+                for line_number, line in enumerate(file, start=1):
+                    if query_folded in line.casefold():
+                        excerpt = line.strip()
+                        if len(excerpt) > 240:
+                            excerpt = excerpt[:237] + "..."
+
+                        matches.append(
+                            f"{file_path}:{line_number}: {excerpt}"
+                        )
+
+                        if len(matches) >= limit:
+                            matches.append(
+                                f"... result limit reached; more matches may exist."
+                            )
+                            return "\n".join(matches)
+        except (OSError, UnicodeError):
+            continue
+
+    return "\n".join(matches) if matches else f"No matches found for {query!r}."
 
 
 @mcp.tool
 def read_file(name: str, path: str = "scratch") -> TextContent:
-    """Reads a file.
-    
-    Parses the contents of a file and returns it to you as Text Content.
-    Works with text based files like markdown, text, Python, and any other file based with text.
-    For images, use the `see` command instead.
-    For more advanced operations, you can use the `execute_command` tool.
+    """Reads a text file and returns its contents.
+    Use for inspecting source code, configuration, notes, and other text-based files. Use see for image files.
 
     Args:
-        name (str): The name of the file, including extension.
-        path (str): 'scratch' for the /app/scratch directory, or 'transfer' for the /app/transfer directory, or specify a path starting from root; defaults to scratch. Optional.
+        name: The filename, including its extension.
+        path: 'scratch', 'transfer', or a directory path (default: 'scratch').
 
     Returns:
-        TextContent: The contents of the specified file.
+        The file contents as text.
     """
     if path == "scratch":
         file_path = os.path.join("/app", "scratch", name)
@@ -513,19 +633,16 @@ def read_file(name: str, path: str = "scratch") -> TextContent:
 
 @mcp.tool
 def write_file(name: str, content: str, path: str = "scratch") -> TextContent:
-    """Writes content to a file.
-
-    Creates a new file or overwrites an existing file with the specified content.
-    Works with text-based files like markdown, text, Python, and other text files.
-    For more advanced operations, you can use the `execute_command` tool.
+    """Writes text content to a file, creating or overwriting it.
+    Use for creating documents, source code, configuration, and other text-based files. Parent directories are created when needed.
 
     Args:
-        name (str): The name of the file, including extension.
-        content (str): The text content to write to the file.
-        path (str): 'scratch' for the /app/scratch directory, or 'transfer' for the /app/transfer directory, or specify a path starting from root; defaults to scratch. Optional.
+        name: The filename, including its extension.
+        content: The text to write.
+        path: 'scratch', 'transfer', or a directory path (default: 'scratch').
 
     Returns:
-        TextContent: A message confirming the file was written.
+        The contents of the written file as text.
     """
     if path == "scratch":
         file_path = os.path.join("/app", "scratch", name)
@@ -549,19 +666,16 @@ def write_file(name: str, content: str, path: str = "scratch") -> TextContent:
 
 @mcp.tool
 def patch_file(name: str, expression: str, path: str = "scratch") -> TextContent:
-    """Modifies an existing file using `sed`
-
-    Applies a sed expression directly to the specified file, allowing text replacement,
-    line modification, content deletion, or other supported text transformations without rewriting the entire file.
-    Changes are applied in place.
+    """Modifies an existing text file using a sed expression.
+    Use for targeted replacements, line edits, or deleting matching text without rewriting the entire file. Changes are applied in place.
 
     Args:
-        name (str): The name of the file, including extension.
-        expression (str): The sed expression to execute. Example: s/old_text/new_text/g — replaces all occurrences of old_text with new_text in the file.
-        path (str): 'scratch', 'transfer', or a directory path starting from root.
-    
+        name: The filename, including its extension.
+        expression: The sed expression, such as s/old_text/new_text/g.
+        path: 'scratch', 'transfer', or a directory path (default: 'scratch').
+
     Returns:
-        TextContent: the contents of the modified file.
+        The contents of the modified file as text.
     """
     if path == "scratch":
         file_path = os.path.join("/app", "scratch", name)
@@ -575,6 +689,9 @@ def patch_file(name: str, expression: str, path: str = "scratch") -> TextContent
         capture_output=True, text=True
     )
 
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or "sed failed")
+
     with open(file_path, "r", encoding='utf-8') as file:
         contents = file.read()
 
@@ -583,22 +700,18 @@ def patch_file(name: str, expression: str, path: str = "scratch") -> TextContent
     return f"An error occured writing the file {file_path}"
 
 
+# ---- Environment -----------------------------------------------------
 @mcp.tool
 def get_environment_info() -> str:
-    """Gets useful information about the current world's state.
-    
-    Returns a snapshot of the current environment and world state, 
-    including time, date, timezone, hostname, IP, etc.
-
-    Note, uses the Internet. Confirm with the User before running this command.
+    """Reports information about the current execution environment.
+    Use to check the current date and time, timezone, hostname, local IP, and internet connectivity. An external service is queried to determine the public IP.
 
     Args:
-        None
+        None.
 
     Returns:
-        str: The environment information as described above.
+        A text report containing the available environment information.
     """
-
     has_internet = False
     try:
         public_ip = urllib.request.urlopen('https://api.ipify.org', timeout=5).read().decode('utf8')

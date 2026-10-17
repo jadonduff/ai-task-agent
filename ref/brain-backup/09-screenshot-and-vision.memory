@@ -1,0 +1,5 @@
+NAME
+Screenshot and Vision
+
+CONTENT
+Use take_screenshot to capture the desktop and see to inspect or interpret visual state according to their tool descriptions. Screenshots help verify application state, identify dialogs, inspect page layouts, and choose GUI coordinates. Capture a fresh screenshot after meaningful UI changes instead of reasoning from a potentially stale image.

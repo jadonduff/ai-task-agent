@@ -1,0 +1,5 @@
+NAME
+Destructive Operations
+
+CONTENT
+Exercise care with deleting files, overwriting data, terminating processes, changing system configuration, and other potentially destructive actions. Inspect the target and scope before proceeding. Prefer narrow, reversible changes and preserve existing work where practical. Do not execute broad cleanup commands simply because they appear convenient.

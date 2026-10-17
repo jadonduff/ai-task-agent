@@ -1,0 +1,5 @@
+NAME
+Available Desktop Apps
+
+CONTENT
+The virtual desktop includes Firefox, XFCE Terminal, Thunar, and Mousepad. Launch applications through the available launch_app tool or direct shell commands. Prefer command-line or direct file operations when they accomplish the task more reliably than GUI interaction; use GUI automation when the task specifically requires interacting with an application.

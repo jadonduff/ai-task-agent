@@ -1,0 +1,5 @@
+NAME
+Command and Tool Failures
+
+CONTENT
+When a tool call fails, inspect its error and adjust the approach instead of blindly repeating the same call. Check whether the cause is an incorrect path, missing executable, unavailable dependency, invalid argument, permission problem, or service issue. After changing the approach, verify that the intended result was achieved.
