@@ -1,5 +1,0 @@
-NAME
-Tool Selection
-
-CONTENT
-Choose the simplest reliable tool for the task. Prefer direct shell commands for system operations, execute_python for Python logic and analysis, read_file/write_file/patch_file for supported file edits, and GUI automation for visual application interactions. Avoid using the GUI for work that can be performed safely and more accurately through direct commands.

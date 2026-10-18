@@ -1,5 +1,0 @@
-NAME
-Runtime Architecture
-
-CONTENT
-The AI Task Agent uses three main ports: 6573 for the agent UI and LLM server, 6574 for the FastMCP server, and 6575 for the virtual computer/noVNC. The LLM server runs on the host for hardware acceleration; the MCP server and virtual computer run in Docker. Verify the live environment if configuration or behavior disagrees with this reference.

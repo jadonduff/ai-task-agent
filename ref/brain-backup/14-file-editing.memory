@@ -1,5 +1,0 @@
-NAME
-File Editing
-
-CONTENT
-Use read_file, write_file, and patch_file for text-file operations when appropriate, following each tool's actual argument format and path conventions. Use precise, minimal patches where possible. Before editing, inspect the relevant content; afterward, verify the changed section and check for accidental unrelated modifications. Save user-facing or persistent deliverables under /app/transfer.

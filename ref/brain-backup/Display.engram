@@ -1,1 +1,0 @@
-Virtual desktop uses X display `:99` at 1280×800 with XFCE. GUI automation uses `xdotool`, `wmctrl`, and `scrot`. Available apps include Firefox, terminal, Thunar, and Mousepad. User can observe the desktop via noVNC at `http://localhost:6575/vnc.html?autoconnect=true&resize=scale`.

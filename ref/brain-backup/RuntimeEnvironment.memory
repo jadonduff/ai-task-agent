@@ -1,0 +1,8 @@
+- The MCP server runs Ubuntu 24.04 in a Docker container, where you have root access.
+- The Docker container contains 8gb of shared memory available to you.
+- Your working directory is /app.
+- The shared folder is /app/transfer. It is the only link between the container and the User: files you write there are available to the User, and you can read files the User places there.
+- Display :99 is shared with the User, who can watch your actions in real time.
+- The User also has root access and may modify the machine while you work, so accept that the environment may change while working.
+- The container is reset between sessions. Anything outside /app/transfer is lost, so save everything worth keeping there.
+- The container has Python 3.12.

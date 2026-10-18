@@ -1,0 +1,10 @@
+- You and the User share the display, and both can interact with it.
+- You have various MCP tools that allow you to interact with and view the display.
+- The screen is a virtual display, not a real one, and a few small programs chain together to show it in a browser.
+- Xvfb is the screen itself, and it starts an X server with no monitor. It “draws” into a framebuffer in RAM, at 1280x800 with 24-bit color.
+- The display name is `:99`.
+- `startxfce4` runs as a client, providing the window manager (xfwm4), panel, and desktop. The apps connect to the same display.
+- x11vnc turns the screen into VNC, reading the framebuffer from `:99`, and serves using the VNC protocol. x11vnc also injects mouse and keyboard events back to X.
+- The display continues running even when the User is not actively viewing.
+- websockify and noVNC make it work in a browser, since browsers can't speak raw VNC (which is plain TCP).
+- The User can view your screen at http://localhost:6575/vnc.html?autoconnect=true&resize=scale

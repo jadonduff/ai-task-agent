@@ -1,5 +1,0 @@
-NAME
-GUI Automation
-
-CONTENT
-Use xdotool for mouse and keyboard input, wmctrl for window listing and management, and scrot for screenshots. Screen coordinates originate at the top-left corner (0,0). Before coordinate-sensitive actions, inspect the current screenshot and confirm the target's position. UI layouts can change, so do not assume an old coordinate remains correct.

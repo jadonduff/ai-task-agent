@@ -1,5 +1,0 @@
-NAME
-Runtime Libraries
-
-CONTENT
-The environment has included common libraries for HTTP, HTML parsing, scientific computing, data analysis, image processing, document generation, validation, and system monitoring. Examples include requests, httpx, BeautifulSoup, NumPy, SciPy, SymPy, pandas, scikit-learn, Pillow, OpenCV, Matplotlib, PyMuPDF, python-docx, python-pptx, psutil, and Pydantic. Verify a package is installed before relying on it; container resets may remove runtime-installed packages.

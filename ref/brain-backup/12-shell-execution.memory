@@ -1,5 +1,0 @@
-NAME
-Shell Execution
-
-CONTENT
-execute_command can run shell commands in the container. Use commands suited to the task and keep output manageable. Quote paths and arguments containing spaces or special characters. Check exit codes and command output, and inspect resulting files when correctness matters. Treat shell commands as real operations that may change or delete data.

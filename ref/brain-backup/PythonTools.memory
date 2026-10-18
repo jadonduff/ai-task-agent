@@ -1,0 +1,11 @@
+- Python: Python 3.12 runs in a virtual environment at /opt/venv, which is first on PATH, so `python` and `pip` use it. Packages you install persist only until the container resets. Preinstalled packages:
+- MCP: FastMCP
+- Web: Requests, HTTPX, BeautifulSoup4, lxml
+- Scientific: NumPy, SciPy, SymPy, NetworkX, scikit-learn
+- Data: pandas, OpenPyXL
+- Images and plotting: Pillow, OpenCV (headless), Matplotlib
+- Documents: PyMuPDF (PDF), python-docx, python-pptx
+- Text: NLTK (no corpora downloaded), RapidFuzz
+- Validation and serialization: Pydantic, jsonschema, orjson, PyYAML
+- System and files: python-magic, py7zr, psutil, Watchdog
+- Utilities: Rich, Tenacity, python-dateutil

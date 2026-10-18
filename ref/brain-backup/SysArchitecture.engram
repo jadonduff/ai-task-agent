@@ -1,1 +1,0 @@
-Port 6573: agent UI and LLM server; port 6574: MCP server; port 6575: virtual computer/noVNC. The LLM server runs on the host for hardware acceleration; the MCP server and virtual computer run in Docker.

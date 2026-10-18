@@ -1,0 +1,6 @@
+- System tools and desktop: Ubuntu 24.04 with packages installed via APT (including recommended packages).
+- Desktop: Xvfb display :99 at 1280x800 running an XFCE4 session. The User watches through noVNC (x11vnc + websockify).
+- Apps: Firefox, XFCE Terminal, Thunar (files), Mousepad (text editor).
+- GUI automation: `xdotool` (mouse and keyboard), `wmctrl` (windows), `scrot` (screenshots). Coordinates are in 1280x800 screen space.
+- Utilities: build-essential, CMake, Git, curl, wget, libmagic1.
+- Additional system packages can be installed with apt when needed and authorized.

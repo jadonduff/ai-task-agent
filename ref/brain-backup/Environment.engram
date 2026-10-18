@@ -1,1 +1,0 @@
-Ubuntu 24.04 Docker container; root access; Python 3.12. Working directory `/app`; temporary files in `/app/scratch`; user-shared, persistent files in `/app/transfer`. Container state outside `/app/transfer` is lost on reset.

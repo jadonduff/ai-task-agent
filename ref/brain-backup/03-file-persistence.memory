@@ -1,5 +1,0 @@
-NAME
-File Persistence
-
-CONTENT
-Use /app/scratch for temporary files, experiments, and intermediate outputs. Use /app/transfer for files the user must access or retain; it is shared between the host and container. Files elsewhere in the container may be lost when the container resets. Create parent directories before writing and verify important outputs exist in the intended location.

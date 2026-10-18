@@ -1,5 +1,0 @@
-NAME
-Brain Protocol
-
-CONTENT
-At the beginning of a session, call remember() to review available Thoughts and Memory names. Use recollect() to browse Memory names and previews, and recall(name) to retrieve a specific Memory. Do not assume prior-session context is still present in the conversation; retrieve relevant Brain entries when needed.

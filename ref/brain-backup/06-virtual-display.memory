@@ -1,5 +1,0 @@
-NAME
-Virtual Display
-
-CONTENT
-The virtual computer uses Xvfb on display :99 at 1280x800, with XFCE providing the desktop. Set DISPLAY=:99 for GUI applications and screenshot commands. The display can continue running while the user is not viewing it. The browser-accessible noVNC page is http://localhost:6575/vnc.html?autoconnect=true&resize=scale.

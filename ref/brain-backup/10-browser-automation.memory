@@ -1,5 +1,0 @@
-NAME
-Browser Automation
-
-CONTENT
-When using Firefox or a web application, distinguish between browser interaction and direct HTTP access. Prefer direct requests or other programmatic interfaces for reliable, repeatable operations when appropriate. Use the visible browser when interaction, rendering, authentication state, or visual verification matters. Do not assume a page loaded successfully without checking the resulting state.

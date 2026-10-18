@@ -1,1 +1,0 @@
-Prefer direct commands and file operations over GUI automation when practical. Use screenshots when visual state matters. Keep tool outputs concise, verify important actions, and save user-facing deliverables to `/app/transfer`.

@@ -1,5 +1,0 @@
-NAME
-Container Environment
-
-CONTENT
-The MCP container runs Ubuntu 24.04 with root access and Python 3.12. The working directory is /app. The virtual desktop uses DISPLAY=:99. Prefer absolute paths when the working directory could be ambiguous. Use get_environment_info to verify live configuration rather than assuming stored environment details are always current.

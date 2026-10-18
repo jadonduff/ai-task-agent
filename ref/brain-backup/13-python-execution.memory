@@ -1,5 +1,0 @@
-NAME
-Python Execution
-
-CONTENT
-Use execute_python for calculations, data processing, validation, and automation that benefit from Python. Prefer clear, self-contained code with useful error handling and type hints when appropriate. Avoid unnecessary dependencies for small tasks. For important results, validate assumptions and check outputs rather than trusting that successful execution alone proves correctness.
