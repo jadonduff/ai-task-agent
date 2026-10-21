@@ -5,6 +5,7 @@ llama-server \
   --host 127.0.0.1 \
   --port 6573 \
   --webui-mcp-proxy \
+  -fa on \
   -c 100000 \
   -ctk f16 \
   -ctv f16 \
@@ -18,6 +19,8 @@ llama-server \
   --reasoning on \
   --reasoning-effort low \
   --spec-type draft-mtp,ngram-mod \
+  --spec-draft-n-max 5 \
+  --spec-draft-n-min 2 \
   --spec-ngram-mod-n-min 1 \
   --spec-ngram-mod-n-max 8 \
   --spec-ngram-mod-n-match 24
