@@ -51,7 +51,7 @@ _browser_page = None
 
 # ---- Helpers ---------------------------------------------------------
 def xdo(*args):
-    r = subprocess.run(["xdotool", *args], capture_output=True, text=True, timeout=10)
+    r = subprocess.run(["xdotool", *args], capture_output=True, text=True, timeout=300)
     if r.returncode:
         raise RuntimeError(r.stderr.strip() or "xdotool failed")
 
