@@ -12,14 +12,12 @@ controller_mcp = FastMCP("AI Task Agent")
 _atspi = None
 
 def _get_atspi():
-    """Lazily initialize AT-SPI with correct environment."""
     global _atspi
     if _atspi is not None:
         return _atspi
 
     os.environ.setdefault("DISPLAY", ":99")
 
-    # Borrow D-Bus from XFCE session
     if not os.environ.get("DBUS_SESSION_BUS_ADDRESS"):
         try:
             pid = subprocess.check_output(
@@ -33,7 +31,6 @@ def _get_atspi():
         except Exception:
             pass
 
-    # Fix venv missing dist-packages
     if "/usr/lib/python3/dist-packages" not in sys.path:
         sys.path.insert(0, "/usr/lib/python3/dist-packages")
 
@@ -45,7 +42,6 @@ def _get_atspi():
 
 
 def _walk(node):
-    """Recursively yield all accessible nodes."""
     yield node
     try:
         for i in range(node.get_child_count()):
@@ -57,7 +53,6 @@ def _walk(node):
 
 
 def _is_interactive(Atspi, acc):
-    """Check if accessible is showing, enabled, and has actions."""
     try:
         s = acc.get_state_set()
         if not (s.contains(Atspi.StateType.SHOWING) and s.contains(Atspi.StateType.ENABLED)):
@@ -69,7 +64,6 @@ def _is_interactive(Atspi, acc):
 
 
 def _get_extents(Atspi, acc):
-    """Get screen-space bounding box or None."""
     try:
         e = Atspi.Component.get_extents(acc, Atspi.CoordType.SCREEN)
         return {"x": e.x, "y": e.y, "w": e.width, "h": e.height}
@@ -78,7 +72,6 @@ def _get_extents(Atspi, acc):
 
 
 def _get_actions(Atspi, acc):
-    """Get list of action names."""
     try:
         ai = acc.get_action_iface()
         if ai is None:
@@ -97,20 +90,18 @@ def _get_actions(Atspi, acc):
         return []
 
 
+def _physical_click(x: int, y: int):
+    """Move mouse pointer to (x, y) and click."""
+    subprocess.run(["xdotool", "mousemove", str(x), str(y)], check=False)
+    subprocess.run(["xdotool", "click", "1"], check=False)
+
+
 # ---- Tools -----------------------------------------------------------
 @controller_mcp.tool
-def get_interactive_elements(
-    app_filter: str = "",
-    role_filter: str = "",
-    name_contains: str = "",
-    max_results: int = 0,
-) -> dict:
+def get_interactive_elements(max_results: int = 0) -> dict:
     """Returns interactive (clickable) elements on screen via AT-SPI accessibility.
 
     Args:
-        app_filter: Only include elements from apps whose name contains this (case-insensitive). Empty = all.
-        role_filter: Only include elements with this exact role (e.g. "push button", "link", "menu item"). Empty = all.
-        name_contains: Only include elements whose name contains this (case-insensitive). Empty = all.
         max_results: Maximum number of results to return. 0 = unlimited.
 
     Returns:
@@ -125,17 +116,7 @@ def get_interactive_elements(
         app = d.get_child_at_index(i)
         app_name = app.get_name() or ""
 
-        if app_filter and app_filter.lower() not in app_name.lower():
-            continue
-
         for acc in _walk(app):
-            role = acc.get_role_name()
-            name = acc.get_name() or ""
-
-            if role_filter and role != role_filter:
-                continue
-            if name_contains and name_contains.lower() not in name.lower():
-                continue
             if not _is_interactive(Atspi, acc):
                 continue
 
@@ -147,8 +128,8 @@ def get_interactive_elements(
 
             elements.append({
                 "app": app_name,
-                "role": role,
-                "name": name,
+                "role": acc.get_role_name(),
+                "name": acc.get_name() or "",
                 **ext,
                 "actions": _get_actions(Atspi, acc),
             })
@@ -167,16 +148,19 @@ def interact(
     name: str,
     app_filter: str = "",
     action_index: int = 0,
+    click: bool = False,
 ) -> dict:
-    """Interacts with (activates) a specific UI element via AT-SPI accessibility.
+    """Interacts with a specific UI element via AT-SPI accessibility.
 
-    Finds the element by role and name, then performs its action (click/press/select).
+    Finds the element by role and name, then either performs its AT-SPI action
+    or does a physical mouse click at its center.
 
     Args:
-        role: The element's role (e.g. "push button", "menu item", "link", "toggle button").
+        role: The element's role (e.g. "push button", "menu item", "link", "table cell").
         name: The element's name (case-insensitive substring match).
         app_filter: Restrict search to apps whose name contains this (case-insensitive). Empty = all apps.
-        action_index: Which action to perform if multiple exist (default 0 = first).
+        action_index: Which AT-SPI action to perform if multiple exist (default 0). Ignored when click=True.
+        click: If True, move mouse pointer to element center and perform a physical click instead of AT-SPI action.
 
     Returns:
         A dictionary with 'success' bool and details. On failure, includes available matches for disambiguation.
@@ -204,22 +188,34 @@ def interact(
             if ext is None or ext["w"] <= 0 or ext["h"] <= 0:
                 continue
 
-            matches.append((app_name, acc))
+            matches.append((app_name, acc, ext))
 
     if not matches:
         return {"success": False, "error": f"No interactive {role!r} with name containing {name!r} found."}
 
     if len(matches) > 1:
         options = []
-        for app_name, acc in matches:
-            ext = _get_extents(Atspi, acc)
+        for app_name, acc, ext in matches:
             actions = _get_actions(Atspi, acc)
             options.append(f"{app_name}: {acc.get_role_name()} '{acc.get_name()}' at ({ext['x']},{ext['y']}) actions={actions}")
         return {"success": False, "error": f"Ambiguous: {len(matches)} matches. Use app_filter to disambiguate.", "matches": options}
 
-    app_name, acc = matches[0]
-    ai = acc.get_action_iface()
+    app_name, acc, ext = matches[0]
 
+    if click:
+        cx = ext["x"] + ext["w"] // 2
+        cy = ext["y"] + ext["h"] // 2
+        _physical_click(cx, cy)
+        return {
+            "success": True,
+            "activated": f"{acc.get_role_name()} '{acc.get_name()}'",
+            "method": "click",
+            "coordinates": {"x": cx, "y": cy},
+            "app": app_name,
+        }
+
+    # AT-SPI action
+    ai = acc.get_action_iface()
     if action_index >= ai.get_n_actions():
         return {"success": False, "error": f"Action index {action_index} out of range ({ai.get_n_actions()} available)."}
 
@@ -236,6 +232,7 @@ def interact(
     return {
         "success": True,
         "activated": f"{acc.get_role_name()} '{acc.get_name()}'",
+        "method": "action",
         "action": action_name,
         "app": app_name,
     }
