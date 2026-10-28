@@ -13,6 +13,7 @@ import os
 # ---- Setup -------------------------------------------------------
 W, H = 1280, 800
 BUTTONS = {"left": "1", "middle": "2", "right": "3"}
+ALIASES = {"enter": "Return", "esc": "Escape", "backspace": "BackSpace"}
 
 # ---- Helpers ---------------------------------------------------------
 def xdo(*args):
@@ -55,6 +56,7 @@ def take_screenshot(save: bool = False) -> ImageContent:
     data = base64.b64encode(p.read_bytes()).decode("ascii")
     return ImageContent(type="image", data=data, mimeType=mime)
 
+
 @mcp.tool
 def see(path: str) -> ImageContent:
     """Loads an image from a file for visual inspection.
@@ -73,6 +75,7 @@ def see(path: str) -> ImageContent:
     mime = mimetypes.guess_type(p.name)[0] or "image/png"
     data = base64.b64encode(p.read_bytes()).decode("ascii")
     return ImageContent(type="image", data=data, mimeType=mime)
+
 
 @mcp.tool
 def click(x: int, y: int, button: str = "left", clicks: int = 1, wait_after: float = 0.5) -> str:
@@ -135,3 +138,40 @@ def scroll(x: int, y: int, direction: str, amount: int = 3, wait_after: float = 
     time.sleep(wait_after)
 
     return f"Scrolled {direction} {amount} steps at ({x}, {y})"
+
+
+@mcp.tool
+def type_text(text: str, wait_after: float = 0.3) -> str:
+    """Types literal text into the currently focused application.
+    Use for entering text into fields, editors, terminals, and other interfaces. Use press_keys for keyboard shortcuts or special keys.
+
+    Args:
+        text: The text to type.
+        wait_after: Seconds to wait afterward (default: 0.3).
+
+    Returns:
+        A message reporting the number of characters typed.
+    """
+    xdo("type", "--delay", "15", "--", text)
+    time.sleep(wait_after)
+    return f"Typed {len(text)} characters"
+
+
+@mcp.tool
+def press_keys(keys: list[str], wait_after: float = 0.3) -> str:
+    """Presses keyboard keys or key combinations in sequence.
+    Use for shortcuts, navigation, editing, and special keys. Combine modifiers with +, such as ctrl+l, and use type_text for literal text.
+
+    Args:
+        keys: Ordered list of keys or key combinations.
+        wait_after: Seconds to wait afterward (default: 0.3).
+
+    Returns:
+        A message describing the keys pressed.
+    """
+    fixed = [
+        "+".join(ALIASES.get(p.lower(), p) for p in k.split("+")) for k in keys
+    ]
+    xdo("key", "--", *fixed)
+    time.sleep(wait_after)
+    return f"Pressed {', '.join(fixed)}"
