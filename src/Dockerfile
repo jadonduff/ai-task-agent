@@ -4,6 +4,11 @@ FROM ubuntu:24.04
 # Set as noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:99
+# Make GTK/Qt apps launched from XFCE expose their accessibility tree
+ENV GTK_MODULES=gail:atk-bridge
+ENV GNOME_ACCESSIBILITY=1
+ENV QT_ACCESSIBILITY=1
+ENV QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1
 
 # Install packages
 RUN apt-get update && apt-get install -y \
@@ -30,6 +35,9 @@ RUN apt-get update && apt-get install -y \
     fonts-dejavu \
     xdg-utils \
     libmagic1 \
+    at-spi2-core \
+    python3-gi \
+    gir1.2-atspi-2.0 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -46,7 +54,7 @@ RUN install -d -m 0755 /etc/apt/keyrings \
 WORKDIR /opt/ai-task-agent
 
 # Create virtual environment
-RUN python3.12 -m venv /opt/venv
+RUN python3.12 -m venv --system-site-packages /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONPATH="/opt/ai-task-agent"
 
