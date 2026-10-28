@@ -41,10 +41,10 @@ async def _get_role_locator(role: str, name: str, index: int = 0):
     return locator.nth(index)
 
 # ---- MCP -------------------------------------------------------------
-mcp = FastMCP("AI Task Agent")
+web_tools_mcp = FastMCP("AI Task Agent")
 
 # ---- Searching -------------------------------------------------------
-@mcp.tool
+@web_tools_mcp.tool
 def search(query: str, max_results: int = 5) -> dict:
     """Searches the web using DuckDuckGo.
     Use to find webpages, research information, and discover relevant URLs and summaries.
@@ -84,7 +84,7 @@ def search(query: str, max_results: int = 5) -> dict:
     }
 
 # ---- Browser ---------------------------------------------------------
-@mcp.tool
+@web_tools_mcp.tool
 async def browser(websitelink: str) -> dict:
     """Opens a visible browser and inspects the webpage's accessible structure.
     Use to understand page content and locate links, buttons, and form fields. The browser remains open for visual interaction.
@@ -160,7 +160,7 @@ async def browser(websitelink: str) -> dict:
 
 # ---- ALL BELOW WILL BE COMBINED INTO BROWSER TOOL -----------------------------------------------------------
 
-@mcp.tool
+@web_tools_mcp.tool
 async def close_browser() -> str:
     """Closes the persistent browser session.
     Use when browser inspection is complete and the visible browser is no longer needed.
@@ -186,7 +186,7 @@ async def close_browser() -> str:
     return "Browser session closed."
 
 
-@mcp.tool
+@web_tools_mcp.tool
 async def browser_inspect() -> dict:
     """Inspects the current webpage and its visible controls.
     Use after navigation or interaction to understand page content and determine the next action.
@@ -250,7 +250,7 @@ async def browser_inspect() -> dict:
     }
 
 
-@mcp.tool
+@web_tools_mcp.tool
 async def browser_click(role: str, name: str, index: int = 0) -> str:
     """Clicks a webpage element by its accessible role and name.
     Use after browser_inspect to activate buttons, links, and other interactive controls.
@@ -269,7 +269,7 @@ async def browser_click(role: str, name: str, index: int = 0) -> str:
     return f"Clicked {role!r} named {name!r} (match {index})."
 
 
-@mcp.tool
+@web_tools_mcp.tool
 async def browser_fill(label: str, value: str) -> str:
     """Fills a webpage form field using its accessible label.
     Use for entering text into search boxes, login forms, and other labeled fields. Existing content is replaced.
@@ -298,7 +298,7 @@ async def browser_fill(label: str, value: str) -> str:
     return f"Filled field {label!r} with {len(value)} characters."
 
 
-@mcp.tool
+@web_tools_mcp.tool
 async def browser_hover(role: str, name: str, index: int = 0) -> str:
     """Hovers over a webpage element by its accessible role and name.
     Use to reveal dropdown menus, tooltips, and other hover-triggered content.

@@ -22,10 +22,10 @@ def xdo(*args):
         raise RuntimeError(r.stderr.strip() or "xdotool failed")
 
 # ---- MCP -------------------------------------------------------------
-mcp = FastMCP("AI Task Agent")
+input_tools_mcp = FastMCP("AI Task Agent")
 
 # ---- Screen & Input --------------------------------------------------
-@mcp.tool
+@input_tools_mcp.tool
 def take_screenshot(save: bool = False) -> ImageContent:
     """Captures and returns an image of the virtual computer's display.
     Use to inspect the current screen, verify visual changes, or identify interface elements. Screenshots are temporary unless saved.
@@ -57,7 +57,7 @@ def take_screenshot(save: bool = False) -> ImageContent:
     return ImageContent(type="image", data=data, mimeType=mime)
 
 
-@mcp.tool
+@input_tools_mcp.tool
 def see(path: str) -> ImageContent:
     """Loads an image from a file for visual inspection.
     Use to examine existing screenshots, graphics, or other supported image files without opening them in a graphical application.
@@ -77,7 +77,7 @@ def see(path: str) -> ImageContent:
     return ImageContent(type="image", data=data, mimeType=mime)
 
 
-@mcp.tool
+@input_tools_mcp.tool
 def click(x: int, y: int, button: str = "left", clicks: int = 1, wait_after: float = 0.5) -> str:
     """Clicks a position on the virtual computer's display.
     Use for interacting with buttons, links, menus, and other visual controls. Coordinates originate at the top-left of the 1280x800 screen.
@@ -103,7 +103,7 @@ def click(x: int, y: int, button: str = "left", clicks: int = 1, wait_after: flo
     return f"{button} clicked {clicks}x at ({x}, {y})"
 
 
-@mcp.tool
+@input_tools_mcp.tool
 def scroll(x: int, y: int, direction: str, amount: int = 3, wait_after: float = 0.3) -> str:
     """Scrolls the virtual computer's display at a specified position.
     Use to navigate webpages, menus, and documents beyond the visible area.
@@ -140,7 +140,7 @@ def scroll(x: int, y: int, direction: str, amount: int = 3, wait_after: float = 
     return f"Scrolled {direction} {amount} steps at ({x}, {y})"
 
 
-@mcp.tool
+@input_tools_mcp.tool
 def type_text(text: str, wait_after: float = 0.3) -> str:
     """Types literal text into the currently focused application.
     Use for entering text into fields, editors, terminals, and other interfaces. Use press_keys for keyboard shortcuts or special keys.
@@ -157,7 +157,7 @@ def type_text(text: str, wait_after: float = 0.3) -> str:
     return f"Typed {len(text)} characters"
 
 
-@mcp.tool
+@input_tools_mcp.tool
 def press_keys(keys: list[str], wait_after: float = 0.3) -> str:
     """Presses keyboard keys or key combinations in sequence.
     Use for shortcuts, navigation, editing, and special keys. Combine modifiers with +, such as ctrl+l, and use type_text for literal text.

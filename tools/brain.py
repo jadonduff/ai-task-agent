@@ -5,10 +5,10 @@ from mcp.types import TextContent, ImageContent
 import os
 
 # ---- MCP -------------------------------------------------------------
-mcp = FastMCP("AI Task Agent")
+brain_mcp = FastMCP("AI Task Agent")
 
 # ---- Brain -----------------------------------------------------------
-@mcp.tool
+@brain_mcp.tool
 def remember() -> TextContent:
     """Retrieves stored Thoughts and lists available Memory names.
     Use at session startup to load essential context, or whenever you need to review your persistent knowledge.
@@ -46,7 +46,7 @@ def remember() -> TextContent:
     return TextContent(type="text", text=out)
 
 # ---- ALL BELOW WILL BE COMBINED INTO THINK TOOL -----------------------------------------------------------
-@mcp.tool
+@brain_mcp.tool
 def learn(name: str, thought: str) -> str:
     """Creates a short, persistent Thought in the Brain.
     Use for essential facts, preferences, and ongoing tasks that should be readily available across sessions. A maximum of seven Thoughts is allowed.
@@ -77,7 +77,7 @@ def learn(name: str, thought: str) -> str:
     return f"Learned '{name}' successfully."
 
 
-@mcp.tool
+@brain_mcp.tool
 def purge(name: str) -> str:
     """Deletes a stored Thought from the Brain.
     Use to remove outdated or unnecessary Thoughts and free a slot when the seven-Thought limit is reached.
@@ -97,7 +97,7 @@ def purge(name: str) -> str:
     return f"Forgot Thought '{name}' successfully."
 
 
-@mcp.tool
+@brain_mcp.tool
 def recall(memory: str) -> str:
     """Retrieves the full content of a stored Memory.
     Use when you need detailed information from a previous session or a specific reference entry identified by name.
@@ -117,7 +117,7 @@ def recall(memory: str) -> str:
         return f.read()
 
 
-@mcp.tool
+@brain_mcp.tool
 def memorize(name: str, memory: str) -> str:
     """Creates a persistent Memory in the Brain.
     Use for useful discoveries, procedures, decisions, and reference information that may be needed in future sessions. Memory names must be unique.
@@ -140,7 +140,7 @@ def memorize(name: str, memory: str) -> str:
     return f"Memorized '{name}' successfully."
 
 
-@mcp.tool
+@brain_mcp.tool
 def forget(name: str) -> str:
     """Deletes a stored Memory from the Brain.
     Use to remove obsolete or unnecessary reference information. This operation permanently removes the named Memory from the Brain directory.

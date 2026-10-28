@@ -7,10 +7,10 @@ import socket
 import time
 
 # ---- MCP -------------------------------------------------------------
-mcp = FastMCP("AI Task Agent")
+misc_mcp = FastMCP("AI Task Agent")
 
 # ---- Screen & Input --------------------------------------------------
-@mcp.tool
+@misc_mcp.tool
 def delay(milliseconds: int) -> str:
     """Pauses execution for a specified duration.
     Use to allow applications, menus, pages, or other operations time to finish before continuing.
@@ -26,7 +26,7 @@ def delay(milliseconds: int) -> str:
 
 
 # ---- Environment -----------------------------------------------------
-@mcp.tool
+@misc_mcp.tool
 def get_environment_info() -> str:
     """Reports information about the current execution environment.
     Use to check the current date and time, timezone, hostname, local IP, and internet connectivity. An external service is queried to determine the public IP.

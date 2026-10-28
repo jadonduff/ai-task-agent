@@ -6,9 +6,9 @@ import subprocess
 import os
 
 # ---- MCP -------------------------------------------------------------
-mcp = FastMCP("AI Task Agent")
+file_tools_mcp = FastMCP("AI Task Agent")
 
-@mcp.tool
+@file_tools_mcp.tool
 def read_text_file(name: str, path: str = "scratch") -> TextContent:
     """Reads a text file and returns its contents.
     Use for inspecting source code, configuration, notes, and other text-based files. Use see for image files.
@@ -35,7 +35,7 @@ def read_text_file(name: str, path: str = "scratch") -> TextContent:
     return f"An error occured reading the file {file_path}"
 
 
-@mcp.tool
+@file_tools_mcp.tool
 def write_text_file(name: str, content: str, path: str = "scratch") -> TextContent:
     """Writes text content to a file, creating or overwriting it.
     Use for creating documents, source code, configuration, and other text-based files. Parent directories are created when needed.
@@ -68,7 +68,7 @@ def write_text_file(name: str, content: str, path: str = "scratch") -> TextConte
     return f"An error occured writing the file {file_path}"
 
 
-@mcp.tool
+@file_tools_mcp.tool
 def edit_text_file(name: str, expression: str, path: str = "scratch") -> TextContent:
     """Modifies an existing text file using a sed expression.
     Use for targeted replacements, line edits, or deleting matching text without rewriting the entire file. Changes are applied in place.

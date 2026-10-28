@@ -9,10 +9,10 @@ import time
 import io
 
 # ---- MCP -------------------------------------------------------------
-mcp = FastMCP("AI Task Agent")
+terminal_mcp = FastMCP("AI Task Agent")
 
 # ---- Execution -------------------------------------------------------
-@mcp.tool
+@terminal_mcp.tool
 def execute_command(command: str, timeout: int = 60) -> dict:
     """Runs a shell command in the container and captures its result.
     Use for command-line operations, system utilities, and shell scripts.
@@ -32,7 +32,7 @@ def execute_command(command: str, timeout: int = 60) -> dict:
         "stderr": r.stderr
     }
 
-@mcp.tool
+@terminal_mcp.tool
 def execute_python(code: str) -> dict:
     """Executes Python code in the server's Python environment.
     Use for calculations, data processing, scripting, and programmatic operations.
@@ -62,7 +62,7 @@ def execute_python(code: str) -> dict:
             "success": False,
         }
 
-@mcp.tool
+@terminal_mcp.tool
 def launch_app(command: str, wait_after: float = 2.0) -> str:
     """Launches a program in the background.
     Use for graphical applications or long-running processes that should continue after the tool returns. Process output is logged to /tmp/launch.log.
