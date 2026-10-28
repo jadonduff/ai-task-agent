@@ -29,12 +29,12 @@ from tools.web_tools import web_tools_mcp
 # ---- MCP -------------------------------------------------------------
 mcp = FastMCP("AI Task Agent")
 
-mcp.mount(brain_mcp)
+mcp.mount(terminal_mcp)
 mcp.mount(file_tools_mcp)
 mcp.mount(input_tools_mcp)
-mcp.mount(misc_mcp)
-mcp.mount(terminal_mcp)
+mcp.mount(brain_mcp)
 mcp.mount(web_tools_mcp)
+mcp.mount(misc_mcp)
 
 if __name__ == "__main__":
     mcp.run()
