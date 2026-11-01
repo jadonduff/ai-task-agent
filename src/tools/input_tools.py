@@ -48,6 +48,23 @@ def xdo(*args):
     r = subprocess.run(["xdotool", *args], capture_output=True, text=True, timeout=300)
     if r.returncode:
         raise RuntimeError(r.stderr.strip() or "xdotool failed")
+    
+    return r.stdout
+
+def mouseGlide(x, y, steps=20):
+
+    out = xdo("getmouselocation", "--shell")
+
+    x0, y0 = (int(l.split("=")[1]) for l in out.splitlines()[:2])
+
+    chain = []
+
+    for i in range(1, steps + 1):
+
+        currDistance = (t := i / steps) * t * (3 - 2 * t)
+        chain += ["mousemove", str(round(x0 + (x - x0) * currDistance)), str(round(y0 + (y - y0) * currDistance)), "sleep", "0.01"]
+
+    xdo(*chain)
 
 # ---- MCP -------------------------------------------------------------
 input_tools_mcp = FastMCP("AI Task Agent")
@@ -71,7 +88,7 @@ def take_screenshot(save: bool = False) -> ImageContent:
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
-    result = subprocess.run(["scrot", path], env={**os.environ, "DISPLAY": ":99"}, text=True, timeout=10, capture_output=True)
+    result = subprocess.run(["scrot", "-p", path], env={**os.environ, "DISPLAY": ":99"}, text=True, timeout=10, capture_output=True)
 
     if result.returncode != 0 or not os.path.exists(path):
         raise RuntimeError(f"Screenshot failed: {result.stderr.strip() or 'no output file'}")
@@ -107,25 +124,35 @@ def see(path: str) -> ImageContent:
 
 @input_tools_mcp.tool
 def click(x: int, y: int, button: str = "left", clicks: int = 1, wait_after: float = 0.5) -> str:
-    """Clicks a position on the virtual computer's display.
+
+    """Moves the pointer to a position on the virtual computer's display and clicks.
     Use for interacting with buttons, links, menus, and other visual controls. Coordinates originate at the top-left of the 1280x800 screen.
 
     Args:
         x: Horizontal screen coordinate.
         y: Vertical screen coordinate.
         button: Mouse button (left, middle, or right; default: left).
-        clicks: Number of clicks (default: 1).
+        clicks: Number of clicks (default: 1). 0 can be used to only move the pointer, e.g. to hover over something .
         wait_after: Seconds to wait afterward (default: 0.5).
 
     Returns:
-        A message describing the performed click.
+        A message describing the performed action.
     """
     if not (0 <= x < W and 0 <= y < H):
         raise ValueError(f"({x}, {y}) is outside the {W}x{H} screen")
     if button not in BUTTONS:
         raise ValueError("button must be left, middle, or right")
-    xdo("mousemove", "--sync", str(x), str(y))
+    
+    if clicks < 0:
+        raise ValueError("clicks cannot be negative")
+
+    mouseGlide(x, y)
     time.sleep(0.1)  # let hover effects register
+
+    if clicks == 0:
+        time.sleep(wait_after)
+        return f"Moved pointer to ({x}, {y})"
+    
     xdo("click", "--repeat", str(clicks), "--delay", "50", BUTTONS[button])
     time.sleep(wait_after)
     return f"{button} clicked {clicks}x at ({x}, {y})"

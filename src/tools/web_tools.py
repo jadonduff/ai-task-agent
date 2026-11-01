@@ -1,4 +1,5 @@
 # ---- Libraries -------------------------------------------------------
+from ddgs.exceptions import DDGSException
 from fastmcp import FastMCP
 from playwright.async_api import async_playwright
 from urllib.parse import urlparse
@@ -66,19 +67,24 @@ def search(query: str, max_results: int = 5) -> dict:
         results = DDGS(timeout=10).text(
             query,
             max_results=max_results,
-            backend="duckduckgo"
+            backend="auto"
         )
-    except Exception as e:
-        raise RuntimeError(f"Web search failed: {e}") from e
 
+    except DDGSException as e: 
+        if "No results" in str(e):
+            return {"query": query, "results": []}
+
+        raise RuntimeError(f"Web search failed:{e}") from e
+    
     return {
         "query": query,
         "results": [
             {
-                "title": result.get("title", ""),
+                "title": " ".join(result.get("title", "").split()),
                 "url": result.get("href", ""),
-                "snippet": result.get("body", "")[:500]
+                "snippet": " ".join(result.get("body", "").split())[:350]
             }
+
             for result in results
         ]
     }
