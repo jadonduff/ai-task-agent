@@ -1,6 +1,6 @@
 # ---- Libraries -------------------------------------------------------
 from fastmcp import FastMCP
-from mcp.types import TextContent, ImageContent
+from mcp.types import ImageContent, AudioContent
 
 from pathlib import Path
 import subprocess
@@ -14,6 +14,8 @@ import os
 W, H = 1280, 800
 BUTTONS = {"left": "1", "middle": "2", "right": "3"}
 ALIASES = {"enter": "Return", "esc": "Escape", "backspace": "BackSpace"}
+AUDIO_TYPES = {".wav": "audio/wav", ".mp3": "audio/mpeg", ".ogg": "audio/ogg", ".flac": "audio/flac", ".m4a": "audio/mp4", ".opus": "audio/opus"}
+MAX_BYTES = 25 * 1024 * 1024
 
 # ---- Helpers ---------------------------------------------------------
 def xdo(*args):
@@ -76,6 +78,30 @@ def see(path: str) -> ImageContent:
     data = base64.b64encode(p.read_bytes()).decode("ascii")
     return ImageContent(type="image", data=data, mimeType=mime)
 
+@input_tools_mcp.tool
+def listen(path: str) -> AudioContent:
+    """Loads audio from a file for auditory inspection.
+    Use to examine existing audio, sounds, or other supported audio files without opening them in an audial application. 
+    
+    Supported audio file types are: .mp3, .wav, .ogg, .flac, .m4a, and .opus.
+    Maxiumum file size: 25 MB.
+
+    Args:
+        path: The path to the audio file.
+    
+    Returns:
+        The audio content for auditory analysis.
+    """
+    
+    p = Path(path)
+    if not p.is_file():
+        raise ValueError(f"No such file: {path}")
+
+    mime = AUDIO_TYPES.get(p.suffix.lower()) or mimetypes.guess_type(p.name)[0]
+    if p.stat().st_size > MAX_BYTES:
+        raise ValueError(f"File too large! The file size limit is 25 MB.")
+    data = base64.b64encode(p.read_bytes()).decode("ascii")
+    return AudioContent(type="audio", data=data, mimeType=mime)
 
 @input_tools_mcp.tool
 def click(x: int, y: int, button: str = "left", clicks: int = 1, wait_after: float = 0.5) -> str:
