@@ -11,6 +11,9 @@ W, H = 1280, 800
 BUTTONS = {"left": "1", "middle": "2", "right": "3"}
 ALIASES = {"enter": "Return", "esc": "Escape", "backspace": "BackSpace"}
 
+_playwright = None
+_browser_instance = None
+_browser_page = None
 # ---- Helpers ---------------------------------------------------------
 def _require_browser_page():
     if (
@@ -24,21 +27,26 @@ def _require_browser_page():
     return _browser_page
 
 
-async def _get_role_locator(role: str, name: str, index: int = 0):
-    if index < 0:
+async def _get_interactable(dataid: int):
+    if dataid < 0:
         raise ValueError("index cannot be negative")
 
     page = _require_browser_page()
-    locator = page.get_by_role(role, name=name, exact=True)
+    # locator = page.get_by_role(role, name=name, exact=True)
+    locator = page.locator(f'[data-id="{dataid}"]')
+    # 2. Extract its complete HTML tag (outerHTML)
+    # raw_html = await locator.evaluate("el => el.outerHTML")
+    # print("--- Raw Element HTML ---")
+    # print(raw_html)
     count = await locator.count()
 
-    if index >= count:
-        raise ValueError(
-            f"No matching element for role={role!r}, name={name!r}. "
-            f"Found {count} match(es)."
-        )
+    if count == 0:
+            raise ValueError(f"No matching element found for data-id {dataid}.")
+    elif count > 1:
+        # Warn if multiple elements accidentally have the same ID
+        print(f"Warning: Found {count} elements with data-id {dataid}. Clicking the first one.")
 
-    return locator.nth(index)
+    return locator
 
 # ---- MCP -------------------------------------------------------------
 web_tools_mcp = FastMCP("AI Task Agent")
@@ -85,233 +93,336 @@ def search(query: str, max_results: int = 5) -> dict:
 
 # ---- Browser ---------------------------------------------------------
 @web_tools_mcp.tool
-async def browser(websitelink: str) -> dict:
+async def browser(websitelink: str, limittovisible: bool = False, onlyupdate: bool = False) -> dict:
     """Opens a visible browser and inspects the webpage's accessible structure.
     Use to understand page content and locate links, buttons, and form fields. The browser remains open for visual interaction.
 
     Args:
         websitelink: The HTTP or HTTPS URL to inspect.
+        limittovisible: Limits the ARIA to only visible elements if set as True
+        onlyupdate: If set to True, this does not reset the website state and only inspects the website for new ARIA and interactables (Use this AFTER typing, clicking, or scrolling to see how the page changed (e.g., to see new dropdown menus, popups, or loaded content).)
 
     Returns:
         A dictionary containing the URL, title, ARIA snapshot, and visible controls.
     """
-    global _playwright, _browser_instance, _browser_page
+    if (not onlyupdate):
+        global _playwright, _browser_instance, _browser_page
 
-    parsed = urlparse(websitelink)
-    if parsed.scheme not in ("http", "https") or not parsed.netloc:
-        raise ValueError("URL must use HTTP or HTTPS.")
+        parsed = urlparse(websitelink)
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            raise ValueError("URL must use HTTP or HTTPS.")
 
-    os.environ.setdefault("DISPLAY", ":99")
+        os.environ.setdefault("DISPLAY", ":99")
 
-    if _playwright is None:
-        _playwright = await async_playwright().start()
+        if _playwright is None:
+            _playwright = await async_playwright().start()
 
-    if (
-        _browser_instance is None
-        or not _browser_instance.is_connected()
-    ):
-        _browser_instance = await _playwright.chromium.launch(
-            headless=False
+        if (
+            _browser_instance is None
+            or not _browser_instance.is_connected()
+        ):
+            _browser_instance = await _playwright.chromium.launch(
+                headless=False
+            )
+            _browser_page = await _browser_instance.new_page(
+                viewport={"width": W, "height": H}
+            )
+        elif _browser_page is None or _browser_page.is_closed():
+            _browser_page = await _browser_instance.new_page(
+                viewport={"width": W, "height": H}
+            )
+
+        page = _browser_page
+
+        response = await page.goto(
+            websitelink,
+            wait_until="domcontentloaded",
+            timeout=15000
         )
-        _browser_page = await _browser_instance.new_page(
-            viewport={"width": W, "height": H}
-        )
-    elif _browser_page is None or _browser_page.is_closed():
-        _browser_page = await _browser_instance.new_page(
-            viewport={"width": W, "height": H}
-        )
 
-    page = _browser_page
+        if (limittovisible):
 
-    response = await page.goto(
-        websitelink,
-        wait_until="domcontentloaded",
-        timeout=15000
-    )
+            # To this:
+            elements = page.locator("p, h1, h2, h3, h4, li, button, input")
+            count = await elements.count()
 
-    aria_snap = await page.locator("body").aria_snapshot()
+            visible_aria_snapshots = []
 
-    interactive = await page.locator(
-        'a, button, input, select, textarea, [role="button"], [role="link"]'
-    ).evaluate_all("""elements => elements.filter(el => {
-        const r = el.getBoundingClientRect();
-        const s = getComputedStyle(el);
-        return r.width > 0 && r.height > 0 &&
-               s.visibility !== "hidden" && s.display !== "none";
-    }).slice(0, 30).map((el, id) => ({
-        id,
-        tag: el.tagName.toLowerCase(),
-        role: el.getAttribute("role"),
-        type: el.type || null,
-        text: (el.innerText || el.value ||
-               el.getAttribute("aria-label") ||
-               el.placeholder || "").trim().slice(0, 200),
-        href: el.href || null,
-        disabled: !!el.disabled
-    }))""")
+            for i in range(count):
+                el = elements.nth(i)
+                
+                is_in_viewport = await el.evaluate("""
+                    (node) => {
+                        const rect = node.getBoundingClientRect();
+                        // Checks if the specific paragraph/element is within the screen bounds
+                        return (
+                            rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
+                            rect.bottom >= 0 &&
+                            rect.left < (window.innerWidth || document.documentElement.clientWidth) &&
+                            rect.right >= 0
+                        );
+                    }
+                """)
+                
+                if is_in_viewport:
+                    snapshot = await el.aria_snapshot()
+                    visible_aria_snapshots.append(snapshot)
 
-    return {
-        "url": page.url,
-        "title": await page.title(),
-        "status": response.status if response else None,
-        "aria_snap": aria_snap[:12000],
-        "interactive": interactive
-    }
+                aria_snap = visible_aria_snapshots
+        else:
+            aria_snap = await page.locator("body").aria_snapshot()
 
-# ---- ALL BELOW WILL BE COMBINED INTO BROWSER TOOL -----------------------------------------------------------
+        interactive = await page.locator(
+                'a, button, input, select, textarea, [role="button"], [role="link"]'
+            ).evaluate_all("""elements => {
+                const visibleElements = elements.filter(el => {
+                    const r = el.getBoundingClientRect();
+                    const s = getComputedStyle(el);
+                    return r.width > 0 && r.height > 0 &&
+                        s.visibility !== "hidden" && s.display !== "none";
+                }).slice(0, 30);
 
-@web_tools_mcp.tool
-async def close_browser() -> str:
-    """Closes the persistent browser session.
-    Use when browser inspection is complete and the visible browser is no longer needed.
-
-    Args:
-        None.
-
-    Returns:
-        A message confirming the browser session was closed.
-    """
-    global _playwright, _browser_instance, _browser_page
-
-    if _browser_instance is not None:
-        if _browser_instance.is_connected():
-            await _browser_instance.close()
-        _browser_instance = None
-        _browser_page = None
-
-    if _playwright is not None:
-        await _playwright.stop()
-        _playwright = None
-
-    return "Browser session closed."
-
-
-@web_tools_mcp.tool
-async def browser_inspect() -> dict:
-    """Inspects the current webpage and its visible controls.
-    Use after navigation or interaction to understand page content and determine the next action.
-
-    Args:
-        None.
-
-    Returns:
-        A dictionary containing the URL, title, ARIA snapshot, and visible controls.
-    """
-    page = _require_browser_page()
-
-    aria_snap = await page.locator("body").aria_snapshot()
-    controls = await page.locator(
-        'a, button, input, select, textarea, [role="button"], [role="link"]'
-    ).evaluate_all("""elements => {
-        const visible = elements.filter(el => {
-            const r = el.getBoundingClientRect();
-            const s = getComputedStyle(el);
-            return r.width > 0 && r.height > 0 &&
-                   s.visibility !== "hidden" && s.display !== "none";
-        });
-
+                return visibleElements.map((el, id) => {
+                    // INJECT THE ID INTO THE BROWSER DOM
+                    el.setAttribute("data-id", id); 
+                    
+                    return {
+                        id,
+                        tag: el.tagName.toLowerCase(),
+                        text: (el.innerText || el.value || el.placeholder || "").trim().slice(0, 200)
+                        // ... (keep your other properties)
+                    };
+                });
+            }""")
         return {
-            items: visible.slice(0, 30).map((el, id) => {
-                const labels = el.labels
-                    ? [...el.labels].map(label => label.innerText).join(" ")
-                    : "";
-                const labelledBy = el.getAttribute("aria-labelledby");
-                const labelledText = labelledBy
-                    ? labelledBy.split(/\\s+/)
-                        .map(id => document.getElementById(id)?.innerText || "")
-                        .join(" ")
-                    : "";
-
+                    "url": page.url,
+                    "title": await page.title(),
+                    "status": response.status if response else None,
+                    "aria_snap": aria_snap[:12000],
+                    "aria_truncated": len(aria_snap) > 12000,
+                    "interactive": interactive
+                }
+    # browser inspect
+    else:
+        page = _require_browser_page()
+        
+        # 1. Grab the updated ARIA snapshot
+        if limittovisible:
+            elements = page.locator("p, h1, h2, h3, h4, li, button, input")
+            count = await elements.count()
+            visible_aria_snapshots = []
+            for i in range(count):
+                el = elements.nth(i)
+                is_in_viewport = await el.evaluate("""
+                    (node) => {
+                        const rect = node.getBoundingClientRect();
+                        return (
+                            rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
+                            rect.bottom >= 0 &&
+                            rect.left < (window.innerWidth || document.documentElement.clientWidth) &&
+                            rect.right >= 0
+                        );
+                    }
+                """)
+                if is_in_viewport:
+                    snapshot = await el.aria_snapshot()
+                    visible_aria_snapshots.append(snapshot)
+            aria_snap = visible_aria_snapshots
+        else:
+            aria_snap = await page.locator("body").aria_snapshot()
+    
+        # 2. Re-run the ID injection to capture the new dropdown items
+        interactive = await page.locator(
+            'a, button, input, select, textarea, [role="button"], [role="link"]'
+        ).evaluate_all("""elements => {
+            const visibleElements = elements.filter(el => {
+                const r = el.getBoundingClientRect();
+                const s = getComputedStyle(el);
+                return r.width > 0 && r.height > 0 &&
+                    s.visibility !== "hidden" && s.display !== "none";
+            }).slice(0, 50); // Increased slice slightly in case dropdowns add many items
+    
+            return visibleElements.map((el, id) => {
+                // RE-INJECT IDs INTO THE CURRENT DOM
+                el.setAttribute("data-id", id); 
+                
                 return {
                     id,
                     tag: el.tagName.toLowerCase(),
-                    role: el.getAttribute("role"),
-                    type: el.type || null,
-                    name: (
-                        el.getAttribute("aria-label") ||
-                        labelledText || labels || el.innerText ||
-                        el.value || el.placeholder || ""
-                    ).trim().slice(0, 200),
-                    href: el.href || null,
-                    disabled: !!el.disabled
+                    text: (el.innerText || el.value || el.placeholder || "").trim().slice(0, 200)
                 };
-            }),
-            truncated: visible.length > 30
-        };
-    }""")
-
-    return {
-        "url": page.url,
-        "title": await page.title(),
-        "aria_snap": aria_snap[:12000],
-        "aria_truncated": len(aria_snap) > 12000,
-        "interactive": controls["items"],
-        "interactive_truncated": controls["truncated"]
-    }
+            });
+        }""")
+    
+        return {
+            "url": page.url,
+            "title": await page.title(),
+            "aria_snap": aria_snap[:12000] if isinstance(aria_snap, str) else aria_snap,
+            "interactive": interactive
+        }
 
 
+
+        
+
+# @web_tools_mcp.tool
+# async def close_browser() -> str:
+#     """Closes the persistent browser session.
+#     Use when browser inspection is complete and the visible browser is no longer needed.
+
+#     Args:
+#         None.
+
+#     Returns:
+#         A message confirming the browser session was closed.
+#     """
+#     global _playwright, _browser_instance, _browser_page
+
+#     if _browser_instance is not None:
+#         if _browser_instance.is_connected():
+#             await _browser_instance.close()
+#         _browser_instance = None
+#         _browser_page = None
+
+#     if _playwright is not None:
+#         await _playwright.stop()
+#         _playwright = None
+
+#     return "Browser session closed."
+
+
+# @web_tools_mcp.tool
+# async def browser_inspect(limittovisible: bool = False) -> dict:
+#     """Inspects the current live webpage without reloading.
+#     Use this AFTER typing, clicking, or scrolling to see how the page changed 
+#     (e.g., to see new dropdown menus, popups, or loaded content).
+
+#     Args:
+#         limittovisible: If true, limits the ARIA snapshot to only visible elements.
+
+#     Returns:
+#         A dictionary containing the current URL, title, updated ARIA snapshot, and new interactables.
+#     """
+#     page = _require_browser_page()
+
+#     # 1. Grab the updated ARIA snapshot
+#     if limittovisible:
+#         elements = page.locator("p, h1, h2, h3, h4, li, button, input")
+#         count = await elements.count()
+#         visible_aria_snapshots = []
+#         for i in range(count):
+#             el = elements.nth(i)
+#             is_in_viewport = await el.evaluate("""
+#                 (node) => {
+#                     const rect = node.getBoundingClientRect();
+#                     return (
+#                         rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
+#                         rect.bottom >= 0 &&
+#                         rect.left < (window.innerWidth || document.documentElement.clientWidth) &&
+#                         rect.right >= 0
+#                     );
+#                 }
+#             """)
+#             if is_in_viewport:
+#                 snapshot = await el.aria_snapshot()
+#                 visible_aria_snapshots.append(snapshot)
+#         aria_snap = visible_aria_snapshots
+#     else:
+#         aria_snap = await page.locator("body").aria_snapshot()
+
+#     # 2. Re-run the ID injection to capture the new dropdown items
+#     interactive = await page.locator(
+#         'a, button, input, select, textarea, [role="button"], [role="link"]'
+#     ).evaluate_all("""elements => {
+#         const visibleElements = elements.filter(el => {
+#             const r = el.getBoundingClientRect();
+#             const s = getComputedStyle(el);
+#             return r.width > 0 && r.height > 0 &&
+#                 s.visibility !== "hidden" && s.display !== "none";
+#         }).slice(0, 50); // Increased slice slightly in case dropdowns add many items
+
+#         return visibleElements.map((el, id) => {
+#             // RE-INJECT IDs INTO THE CURRENT DOM
+#             el.setAttribute("data-id", id); 
+            
+#             return {
+#                 id,
+#                 tag: el.tagName.toLowerCase(),
+#                 text: (el.innerText || el.value || el.placeholder || "").trim().slice(0, 200)
+#             };
+#         });
+#     }""")
+
+#     return {
+#         "url": page.url,
+#         "title": await page.title(),
+#         "aria_snap": aria_snap[:12000] if isinstance(aria_snap, str) else aria_snap,
+#         "interactive": interactive
+#     }
+
+# await page.locator('[data-ai-id="3"]').click()
 @web_tools_mcp.tool
-async def browser_click(role: str, name: str, index: int = 0) -> str:
-    """Clicks a webpage element by its accessible role and name.
-    Use after browser_inspect to activate buttons, links, and other interactive controls.
+async def browser_click(dataid: int) -> str:
+    """Clicks a webpage element by its data-id.
+    Use after using the browser tool to activate buttons, links, and other interactive controls.
 
     Args:
-        role: The element's accessible role, such as 'button' or 'link'.
-        name: The element's accessible name.
-        index: Zero-based index when multiple exact matches exist (default: 0).
+        dataid: The integer ID of the element from the 'interactive' list.
 
     Returns:
         A message confirming the click.
     """
-    locator = await _get_role_locator(role, name, index)
+    locator = await _get_interactable(dataid)
     await locator.click(timeout=10000)
 
-    return f"Clicked {role!r} named {name!r} (match {index})."
+    return f"clicked dataid {dataid} locator {locator}"
+    # return f"Clicked {role!r} named {name!r} (match {index})."
 
 
 @web_tools_mcp.tool
-async def browser_fill(label: str, value: str) -> str:
-    """Fills a webpage form field using its accessible label.
-    Use for entering text into search boxes, login forms, and other labeled fields. Existing content is replaced.
+async def browser_fill(dataid: int, value: str) -> str:
+    """Types text into a webpage element (like a search bar or form field) by its data-id.
+    Use after using the browser tool to fill out forms or search boxes.
 
     Args:
-        label: The exact accessible label of the field.
-        value: The text to enter into the field.
+        dataid: The integer ID of the input element from the 'interactive' list.
+        text: The string of text you want to type into the element.
 
     Returns:
-        A message confirming the field was filled.
+        A message confirming the text was typed.
     """
     page = _require_browser_page()
-    locator = page.get_by_label(label, exact=True)
+    locator = page.locator(f'[data-id="{dataid}"]')
+    # locator = page.get_by_label(label, exact=True)
     count = await locator.count()
 
     if count == 0:
-        raise ValueError(f"No field found with label {label!r}.")
+        raise ValueError(f"No field found with label {locator!r}.")
 
     if count > 1:
         raise ValueError(
-            f"Multiple fields match label {label!r} ({count} matches)."
+            f"Multiple fields match label {locator!r} ({count} matches)."
         )
 
     await locator.fill(value, timeout=10000)
 
-    return f"Filled field {label!r} with {len(value)} characters."
+    return f"Filled field {dataid!r} {locator} with {len(value)} characters."
 
 
-@web_tools_mcp.tool
-async def browser_hover(role: str, name: str, index: int = 0) -> str:
-    """Hovers over a webpage element by its accessible role and name.
-    Use to reveal dropdown menus, tooltips, and other hover-triggered content.
+# @web_tools_mcp.tool
+# async def browser_hover(dataid: int) -> str:
+#     """Hovers over a webpage element by its accessible role and name.
+#     Use to reveal dropdown menus, tooltips, and other hover-triggered content.
 
-    Args:
-        role: The element's accessible role, such as 'button' or 'link'.
-        name: The element's accessible name.
-        index: Zero-based index when multiple exact matches exist (default: 0).
+#     Args:
+#         role: The element's accessible role, such as 'button' or 'link'.
+#         name: The element's accessible name.
+#         index: Zero-based index when multiple exact matches exist (default: 0).
 
-    Returns:
-        A message confirming the hover.
-    """
-    locator = await _get_role_locator(role, name, index)
-    await locator.hover(timeout=10000)
+#     Returns:
+#         A message confirming the hover.
+#     """
+#     locator = await _get_interactable(dataid)
+#     await locator.hover(timeout=10000)
 
-    return f"Hovered over {role!r} named {name!r} (match {index})."
+#     return f"Hovered over {dataid} {locator}."
