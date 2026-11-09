@@ -26,6 +26,8 @@ services:
     volumes:
       - ./transfer:/app/transfer
       - ./brain:/root/brain
+      - ./knowledge:/app/knowledge:ro
+      - ./ragdata:/app/rag
     shm_size: "8gb"
     environment:
       - TZ=America/New_York

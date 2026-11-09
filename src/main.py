@@ -26,6 +26,7 @@ from tools.misc import misc_mcp
 from tools.terminal import terminal_mcp
 from tools.web_tools import web_tools_mcp
 from tools.controller import controller_mcp
+from tools.rag_tools import rag_tools_mcp
 
 # ---- MCP -------------------------------------------------------------
 mcp = FastMCP("AI Task Agent")
@@ -35,6 +36,7 @@ mcp.mount(file_tools_mcp)
 mcp.mount(controller_mcp)
 mcp.mount(input_tools_mcp)
 mcp.mount(brain_mcp)
+mcp.mount(rag_tools_mcp)
 mcp.mount(web_tools_mcp)
 mcp.mount(misc_mcp)
 

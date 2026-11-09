@@ -49,6 +49,8 @@ The `/docs` subdirectory contains the files rendered via GitHub pages for the Se
 
 The `/ref` subdirectory contains documentation files relevant to the codebase.
 
+The `/knowledge` subdirectory contains the user-provided RAG documentation.
+
 ---
 
 ## Quick Links
@@ -60,4 +62,4 @@ The `/ref` subdirectory contains documentation files relevant to the codebase.
 [Agent's Computer](http://localhost:6575/vnc.html?autoconnect=true&resize=scale)
 
 ---
-*Updated Oct 16, 2026 by Jadon Duff*
+*Updated Nov 8, 2026 by Jadon Duff*
