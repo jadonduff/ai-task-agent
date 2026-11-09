@@ -7,6 +7,7 @@ import traceback
 import shlex
 import time
 import io
+import os
 
 # ---- MCP -------------------------------------------------------------
 terminal_mcp = FastMCP("AI Task Agent")
@@ -63,21 +64,35 @@ def execute_python(code: str) -> dict:
         }
 
 @terminal_mcp.tool
-def launch_app(command: str, wait_after: float = 2.0) -> str:
+def launch_app(command: str, env: dict[str, str] | None = None, wait_after: float = 2.0) -> str:
     """Launches a program in the background.
-    Use for graphical applications or long-running processes that should continue after the tool returns. Process output is logged to /tmp/launch.log.
+
+    Use for graphical applications or long-running processes that should
+    continue after the tool returns. Process output is logged to /tmp/launch.log.
 
     Args:
         command: The program to launch and its arguments.
+        env: Optional environment variables to set for the process, as a
+            mapping of name to value (e.g. {"DISPLAY": ":99", "DEBUG": "1"}).
+            These are added to, and override, the inherited environment.
         wait_after: Seconds to wait before checking the launch (default: 2.0).
 
     Returns:
         A message describing the launch result and process ID.
     """
     args = shlex.split(command)
+    proc_env = {**os.environ, **(env or {})}
+
     log = open("/tmp/launch.log", "ab")
     try:
-        p = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+        p = subprocess.Popen(
+            args,
+            env=proc_env,
+            stdin=subprocess.DEVNULL,
+            stdout=log,
+            stderr=log,
+            start_new_session=True,
+        )
     except FileNotFoundError:
         raise ValueError(f"Program not found: {args[0]}")
     finally:

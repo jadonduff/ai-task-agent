@@ -15,10 +15,19 @@
 #   None.
 # ----------------------------------------------------------------------
 
-.PHONY: build runm runw stopm stopw
+.PHONY: build index reindex runm runw stopm stopw
 
 build:
 	docker compose build
+	$(MAKE) index
+
+index:
+	mkdir -p ragdata
+	docker compose run --rm --no-deps ai-task-agent python -m src.rag.ingest
+
+reindex:
+	rm -rf ragdata
+	$(MAKE) index
 
 runm:
 	./scripts/run-llm-mac.sh & docker compose up

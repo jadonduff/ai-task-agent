@@ -59,8 +59,18 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONPATH="/opt/ai-task-agent"
 
 # Install Python packages
+# (1) CPU-only torch first, so sentence-transformers doesn't pull the multi-GB CUDA build
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# (2) Bake the embedding model into the image
+ARG EMBED_MODEL=google/embeddinggemma-2
+ENV EMBED_MODEL=$EMBED_MODEL \
+    EMBED_DIM=256 \
+    HF_HOME=/opt/hf
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('$EMBED_MODEL')"
+ENV HF_HUB_OFFLINE=1
 
 # Download Playwright browsers and OS dependencies
 RUN playwright install --with-deps chromium
@@ -80,6 +90,10 @@ RUN mkdir -p /app/scratch
 
 # Brain directory
 RUN mkdir -p /root/brain
+
+# RAG
+ENV RAG_DB=/app/rag/rag.db
+RUN mkdir -p /app/rag /app/knowledge
 
 # Where Agent spawns
 WORKDIR /app

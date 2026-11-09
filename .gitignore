@@ -23,3 +23,8 @@ transfer/*
 
 # ---- Brain
 brain/*
+
+# ---- RAG
+ragdata/*
+knowledge/*
+!knowledge/information.txt

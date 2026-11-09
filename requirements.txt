@@ -52,3 +52,8 @@ rich==15.0.0
 tenacity==9.1.2
 python-dateutil==2.9.0.post0
 networkx==3.5
+
+# RAG
+sentence-transformers>=6.1.0
+transformers>=5.19.0
+sqlite-vec
