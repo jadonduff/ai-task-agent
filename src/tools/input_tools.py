@@ -13,9 +13,37 @@ import os
 # ---- Setup -------------------------------------------------------
 W, H = 1280, 800
 BUTTONS = {"left": "1", "middle": "2", "right": "3"}
-ALIASES = {"enter": "Return", "esc": "Escape", "backspace": "BackSpace"}
+ALIASES = {"enter": "Return", "return": "Return", "esc": "Escape", "escape": "Escape",
+    "backspace": "BackSpace", "tab": "Tab", "space": "space", "delete": "Delete",
+    "del": "Delete", "insert": "Insert", "home": "Home", "end": "End",
+    "pageup": "Page_Up", "pgup": "Page_Up", "pagedown": "Page_Down", "pgdn": "Page_Down",
+    "up": "Up", "down": "Down", "left": "Left", "right": "Right",
+    "ctrl": "ctrl", "control": "ctrl", "alt": "alt", "shift": "shift",
+    "super": "super", "win": "super", "cmd": "super", "meta": "super"}
 
 # ---- Helpers ---------------------------------------------------------
+
+
+
+"""
+
+Helper tool to normalize test for xdo, not necessary for now
+
+def normalizeKey(part:str) -> str:
+    press = part.strip()
+
+    if press.lower() in ALIASES:
+
+        return ALIASES[press.lower]
+
+    if len(press) == 1 and press.isalpha():
+
+        return press.lower()
+
+    return press
+
+"""
+
 def xdo(*args):
     r = subprocess.run(["xdotool", *args], capture_output=True, text=True, timeout=300)
     if r.returncode:
@@ -163,7 +191,9 @@ def press_keys(keys: list[str], wait_after: float = 0.3) -> str:
     Use for shortcuts, navigation, editing, and special keys. Combine modifiers with +, such as ctrl+l, and use type_text for literal text.
 
     Args:
-        keys: Ordered list of keys or key combinations.
+        keys: Ordered list of keys or key combinations, a shortcut is ONE item joined with a +:
+            Example: ["ctrl+s"], not ["ctrl", "s"].
+            
         wait_after: Seconds to wait afterward (default: 0.3).
 
     Returns:
