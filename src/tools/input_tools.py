@@ -86,6 +86,8 @@ def listen(path: str) -> AudioContent:
     Supported audio file types are: .mp3, .wav, .ogg, .flac, .m4a, and .opus.
     Maxiumum file size: 25 MB.
 
+    (FIGURE OUT HOW TO TRANSCRIBE THE AUDIO)
+
     Args:
         path: The path to the audio file.
     
@@ -98,7 +100,7 @@ def listen(path: str) -> AudioContent:
         raise ValueError(f"No such file: {path}")
 
     mime = AUDIO_TYPES.get(p.suffix.lower()) or mimetypes.guess_type(p.name)[0]
-    if p.stat().st_size > MAX_BYTES:
+    if p.stat().st_size >= MAX_BYTES:
         raise ValueError(f"File too large! The file size limit is 25 MB.")
     data = base64.b64encode(p.read_bytes()).decode("ascii")
     return AudioContent(type="audio", data=data, mimeType=mime)
