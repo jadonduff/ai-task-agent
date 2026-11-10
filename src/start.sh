@@ -10,6 +10,9 @@ export DBUS_SESSION_BUS_ADDRESS
 # a11y: for `docker exec` debugging: source /tmp/dbus.env
 echo "export DISPLAY=:99 DBUS_SESSION_BUS_ADDRESS='$DBUS_SESSION_BUS_ADDRESS'" > /tmp/dbus.env
 
+# Record desktop notifications for the get_notifications tool
+dbus-monitor --session "interface='org.freedesktop.Notifications',member='Notify'" >> /tmp/notifications.log 2>&1 &
+
 # a11y: turn accessibility on directly on the a11y bus (no dconf needed)
 dbus-send --session --print-reply --dest=org.a11y.Bus /org/a11y/bus \
 org.freedesktop.DBus.Properties.Set \

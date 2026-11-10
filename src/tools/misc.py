@@ -1,6 +1,8 @@
 # ---- Libraries -------------------------------------------------------
 from fastmcp import FastMCP
 
+import re
+
 from datetime import datetime, timezone, date
 import urllib.request
 import socket
@@ -8,6 +10,8 @@ import time
 
 # ---- MCP -------------------------------------------------------------
 misc_mcp = FastMCP("AI Task Agent")
+
+NOTIFY_LOG = "/tmp/notifications.log"
 
 # ---- Screen & Input --------------------------------------------------
 @misc_mcp.tool
@@ -56,3 +60,40 @@ def get_environment_info() -> str:
     Does the machine have Internet (T/F)? {has_internet}.
     If the machine has Internet it's public IP address is {public_ip}
     """
+
+@misc_mcp.tool
+def getNotifications(max_results: int = 10) -> list[dict]:
+
+    """Returns desktop notifcations, (Pop-ups in the corner of the screen) going from newest first. Use to check for messages from applications, driver updates, system updates, etc
+    
+    Args:
+        max_results: Maximum number of notifications that can be returned (Default is 10)
+
+    Returns:
+        a list of notifcations, each with time, app, title, and body.
+    """
+
+    try:
+        with open(NOTIFY_LOG, encoding="utf-8", errors="replace") as f:
+            log = f.read()
+    except FileNotFoundError:
+        raise RuntimeError(f"{NOTIFY_LOG} not found; is the notification recorder running?")
+
+    notifications = []
+    for block in log.split("method call time=")[1:]:
+        header = block.split("\n", 1)[0]
+        strings = re.findall(r'^ {3}string "(.*?)"$', block, re.M | re.S)  # app, icon, title, body
+
+        if "member=Notify" not in header or len(strings) < 4:
+            continue
+
+        timestamp = float(header.split(" ", 1)[0])
+        notifications.append({
+            "time": datetime.fromtimestamp(timestamp).isoformat(timespec="seconds"),
+            "app": strings[0],
+            "title": strings[2],
+            "body": strings[3],
+        })
+
+    return notifications[::-1][:max_results]
+
