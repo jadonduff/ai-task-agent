@@ -15,7 +15,7 @@
 #   None.
 # ----------------------------------------------------------------------
 
-.PHONY: build index reindex runm runw stopm stopw
+.PHONY: build index reindex env-win env-mac runm runw stopm stopw runm-mcp runw-mcp runm-llm runw-llm stopm-mcp stopw-mcp stopm-llm stopw-llm
 
 build:
 	docker compose build
@@ -29,17 +29,52 @@ reindex:
 	rm -rf ragdata
 	$(MAKE) index
 
-runm:
+env-win:
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts\gen-env.ps1
+
+env-mac:
+	./scripts/gen-env.sh
+
+runm: env-mac
 	./scripts/run-llm-mac.sh & docker compose up
 
 stopm:
 	./scripts/stop-llm-mac.sh & docker compose down
 
-runw:
-	cmd /c start "" /B "scripts\run-llm-windows.bat"
-	docker compose up -d --wait
-	cmd /c start "" "http://127.0.0.1:6573"
-	docker compose logs -f
+# runw:
+# 	cmd /c "scripts\run-llm-windows.bat" & docker compose up
+runw: env-win
+	start "llama-server" cmd /c "scripts\run-llm-windows.bat" & docker compose up
 
 stopw:
 	cmd /c "scripts\stop-llm-windows.bat" & docker compose down
+
+# special tethering modes
+runm-mcp: env-mac
+	docker compose up -d --wait
+	docker compose logs -f
+
+runw-mcp: env-win
+	docker compose up -d --wait
+	docker compose logs -f
+
+runm-llm:
+	./scripts/run-llm-mac.sh lan
+
+runw-llm:
+	cmd /c start "" /B "scripts\run-llm-windows.bat" lan
+
+stopm-mcp:
+	docker compose down
+
+stopw-mcp:
+	docker compose down
+
+stopm-llm:
+	./scripts/stop-llm-mac.sh
+
+stopw-llm:
+	cmd /c "scripts\stop-llm-windows.bat"
+
+
+

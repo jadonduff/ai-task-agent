@@ -1,10 +1,24 @@
 #!/bin/bash
 
+# default local mode
+BIND="127.0.0.1"
+EXTRA=(--webui-mcp-proxy)
+
+# special tethering mode
+if [ "$1" = "lan" ]; then
+  if [ -z "$LLAMA_API_KEY" ]; then
+    echo "LAN mode needs LLAMA_API_KEY set." >&2
+    exit 1
+  fi
+  BIND="0.0.0.0"
+  EXTRA=(--api-key "$LLAMA_API_KEY")
+fi
+
 llama-server \
   -m "$LLAMA_MODEL_PATH" \
-  --host 127.0.0.1 \
+  --host "$BIND" \
   --port 6573 \
-  --webui-mcp-proxy \
+  "${EXTRA[@]}"
   -c 100000 \
   -ctk f16 \
   -ctv f16 \
