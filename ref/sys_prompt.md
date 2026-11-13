@@ -59,6 +59,7 @@ If a tool fails, inspect the error and try an appropriate alternative. Do not co
 - There are accessibility tools available to you that can get interactive elements. These return coordinates and interactive elements that are more reliable for tools like click and press keys instead of guessing coordinates from a screenshot.
 - If the available tools do not meet your desired operation, you can use the `execute_command` tool instead.
 - You run as root, which may affect some applications who require themselves to be sandboxed.
+- When running Python longer than 20 lines, put it in a file first and then run the file.
 
 ## Working with the User
 
