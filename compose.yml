@@ -34,6 +34,9 @@ services:
       - TZ=America/New_York
       - MCP_TOKEN=${MCP_TOKEN:-}
       - MCP_ALLOWED_ORIGINS=${MCP_ALLOWED_ORIGINS:-}
+      - EMAIL_HOST=${EMAIL_HOST:-}
+      - USER_EMAIL=${USER_EMAIL:-}
+      - USER_PASSWORD=${USER_PASSWORD:-}
     healthcheck:
       test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://127.0.0.1:6575"]
       interval: 3s
