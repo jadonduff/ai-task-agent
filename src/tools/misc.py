@@ -1,17 +1,19 @@
 # ---- Libraries -------------------------------------------------------
 from fastmcp import FastMCP
 
-import re
 
 from datetime import datetime, timezone, date
 import urllib.request
 import socket
 import time
+import re
+import subprocess
+import os
+import ast
 
 # ---- MCP -------------------------------------------------------------
 misc_mcp = FastMCP("AI Task Agent")
 
-NOTIFY_LOG = "/tmp/notifications.log"
 
 # ---- Screen & Input --------------------------------------------------
 @misc_mcp.tool
@@ -61,39 +63,43 @@ def get_environment_info() -> str:
     If the machine has Internet it's public IP address is {public_ip}
     """
 
+GVARIANT_TOKEN = re.compile(r"""('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")|@\S+ |\b(?:int64|uint32|int32|byte) |\b(?:true|false)\b""")
+
 @misc_mcp.tool
 def getNotifications(max_results: int = 10) -> list[dict]:
+    """Returns recent desktop notifications (pop-ups in the corner of the screen), newest first.
+    Use to check for messages from applications, driver updates, system updates, etc.
 
-    """Returns desktop notifcations, (Pop-ups in the corner of the screen) going from newest first. Use to check for messages from applications, driver updates, system updates, etc
-    
     Args:
-        max_results: Maximum number of notifications that can be returned (Default is 10)
+        max_results: Maximum number of notifications to return (default: 10).
 
     Returns:
-        a list of notifcations, each with time, app, title, and body.
+        A list of notifications, each with time, app, title, and body.
     """
 
-    try:
-        with open(NOTIFY_LOG, encoding="utf-8", errors="replace") as f:
-            log = f.read()
-    except FileNotFoundError:
-        raise RuntimeError(f"{NOTIFY_LOG} not found; is the notification recorder running?")
+    result = subprocess.run(
+        ["gdbus", "call", "--session", "--dest", "org.xfce.Notifyd",
+         "--object-path", "/org/xfce/Notifyd", "--method", "org.xfce.Notifyd.Log.List",
+         "", str(max_results), "false"],
+        capture_output=True, text=True, timeout=10,
+        env={**os.environ, "LC_ALL": "C.UTF-8"},
+    )
+    if result.returncode:
+        raise RuntimeError(f"Could not read the notification log: {result.stderr.strip()}")
+
+    literal = GVARIANT_TOKEN.sub(
+        lambda m: m.group(1) or {"true": "True", "false": "False"}.get(m.group(0), ""),
+        result.stdout,
+    )
 
     notifications = []
-    for block in log.split("method call time=")[1:]:
-        header = block.split("\n", 1)[0]
-        strings = re.findall(r'^ {3}string "(.*?)"$', block, re.M | re.S)  # app, icon, title, body
-
-        if "member=Notify" not in header or len(strings) < 4:
-            continue
-
-        timestamp = float(header.split(" ", 1)[0])
+    for entry in ast.literal_eval(literal)[0]:
+        _id, timestamp_us, _tz, _app_id, app, _icon, title, body = entry[:8]
         notifications.append({
-            "time": datetime.fromtimestamp(timestamp).isoformat(timespec="seconds"),
-            "app": strings[0],
-            "title": strings[2],
-            "body": strings[3],
+            "time": datetime.fromtimestamp(timestamp_us / 1_000_000).isoformat(timespec="seconds"),
+            "app": app,
+            "title": title,
+            "body": body,
         })
 
-    return notifications[::-1][:max_results]
-
+    return notifications

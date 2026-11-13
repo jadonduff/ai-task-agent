@@ -29,6 +29,8 @@ RUN apt-get update && apt-get install -y \
     websockify \
     xfce4 \
     xfce4-terminal \
+    xfce4-notifyd \
+    libglib2.0-bin \
     thunar \
     mousepad \
     dbus-x11 \
