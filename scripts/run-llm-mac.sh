@@ -1,5 +1,12 @@
 #!/bin/bash
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ -f "$ROOT_DIR/.env" ]; then
+  set -a
+  . "$ROOT_DIR/.env"
+  set +a
+fi
+
 # default local mode
 BIND="127.0.0.1"
 EXTRA=(--webui-mcp-proxy)
@@ -18,7 +25,7 @@ llama-server \
   -m "$LLAMA_MODEL_PATH" \
   --host "$BIND" \
   --port 6573 \
-  "${EXTRA[@]}"
+  "${EXTRA[@]}" \
   -c 100000 \
   -ctk f16 \
   -ctv f16 \

@@ -62,9 +62,5 @@ websockify --web /usr/share/novnc 6575 localhost:5900 &
 wait
 ) &
 
-cd /app
-exec fastmcp run /opt/ai-task-agent/src/main.py \
---transport http --host 0.0.0.0 --port 6574
-
 # cors middleware (for tethering mode)
 exec uvicorn main:app --app-dir /opt/ai-task-agent/src --host 0.0.0.0 --port 6574
