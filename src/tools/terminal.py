@@ -95,6 +95,7 @@ def launch_app(command: str, env: dict[str, str] | None = None, wait_after: floa
         raise RuntimeError(f"{args[0]} exited with code {code}; see /tmp/launch.log")
     return f"Launched {args[0]} (pid {p.pid})"
 
+@terminal_mcp.tool
 def scheduleApp(command: str, delaySeconds: float = 0, atTime: str | None = None, env: dict[str, str] | None = None) -> str:
 
     """Schedules a program to launch once, later
@@ -121,12 +122,12 @@ def scheduleApp(command: str, delaySeconds: float = 0, atTime: str | None = None
     if atTime:
 
         try:
-            when = datetime.fromisoformat(atTime)
+            timeWhen = datetime.fromisoformat(atTime)
 
         except ValueError:
 
-            time = datetime.strptime(atTime, "%H:%M")
-            timeWhen = datetime.now().replace(hour=time.hour, minute=time.minute, second=0, microsecond=0)
+            clock = datetime.strptime(atTime, "%H:%M")
+            timeWhen = datetime.now().replace(hour=clock.hour, minute=clock.minute, second=0, microsecond=0)
 
             if timeWhen <= datetime.now():
                 timeWhen += timedelta(days=1)
