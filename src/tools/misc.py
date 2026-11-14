@@ -94,12 +94,12 @@ def getNotifications(max_results: int = 10) -> list[dict]:
 
     notifications = []
     for entry in ast.literal_eval(literal)[0]:
-        _id, timestamp_us, _tz, _app_id, app, _icon, title, body = entry[:8]
+        _id, timestamp_us, _tz, app_id, app_name, _icon, title, body = entry[:8]   # was: _app_id, app
         notifications.append({
             "time": datetime.fromtimestamp(timestamp_us / 1_000_000).isoformat(timespec="seconds"),
-            "app": app,
+            "app": app_name or app_id,                                              # was: app
             "title": title,
             "body": body,
         })
-
+        
     return notifications
