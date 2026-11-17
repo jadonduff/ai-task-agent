@@ -24,6 +24,21 @@ For **Windows**:
 
 **Note**: Currently, `llama.cpp` does not automatically install. You will need to manually install `llama.cpp` which comes with `llama-server`.
 
+## Authentication Setup - Normal Use Mode
+
+1. Start AI Task Agent
+2. Go to .env
+3. Copy the value assigned to LLAMA_API_KEY
+4. Paste that in the Llama UI authentication popup on the Web Application.
+5. Go back to .env
+6. Copy the value assigned to MCP_TOKEN
+7. Go back to the Web Application
+8. Go to the MCP tab
+    - Edit
+        - Turn on Authorization
+            - write: 
+            Bearer (then the mcp token you copied earlier)
+
 ---
 
 ## Routes & Architecture
