@@ -20,10 +20,12 @@ ALIASES = {"enter": "Return", "return": "Return", "esc": "Escape", "escape": "Es
     "up": "Up", "down": "Down", "left": "Left", "right": "Right",
     "ctrl": "ctrl", "control": "ctrl", "alt": "alt", "shift": "shift",
     "super": "super", "win": "super", "cmd": "super", "meta": "super"}
+IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif"}
+TEXT_EXTS = {".txt", ".md", ".json", ".csv", ".log"}
+MAX_TEXT_CHARS = 50_000
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 # ---- Helpers ---------------------------------------------------------
-
-
 
 """
 
@@ -205,3 +207,47 @@ def press_keys(keys: list[str], wait_after: float = 0.3) -> str:
     xdo("key", "--", *fixed)
     time.sleep(wait_after)
     return f"Pressed {', '.join(fixed)}"
+
+@input_tools_mcp.tool()
+def read_clipboard(name: str | None = None) -> ImageContent | TextContent:
+    """Reads clipboard data the user has sent over via the transfer folder.
+    Use when the user says they've copied text or an image for you to look at.
+    With no argument, returns the most recent clip. Text clips are returned as text, image clips as images.
+
+    Args:
+        name: Optional file name inside /app/transfer (default: the newest clip).
+
+    Returns:
+        The clipboard text or image.
+    """
+    
+    root = Path("/app/transfer/clipboard").resolve()
+
+    if name:
+        p = (root / name).resolve()
+        if not p.is_relative_to(root):
+            raise ValueError("Path escapes the transfer folder")
+
+    else:
+        clips = [f for f in root.glob("clip-*") if f.is_file() and f.suffix != ".part"]
+        if not clips:
+            raise ValueError("No clipboard data in the transfer folder")
+        p = max(clips, key=lambda f: f.stat().st_mtime)
+
+    if not p.is_file():
+        raise ValueError(f"No such file: {p.name}")
+
+    ext = p.suffix.lower()
+    if ext in IMAGE_TYPES:
+        if p.stat().st_size > MAX_IMAGE_BYTES:
+            raise ValueError(f"Image too large ({p.stat().st_size} bytes; the limit is {MAX_IMAGE_BYTES})")
+        data = base64.b64encode(p.read_bytes()).decode("ascii")
+        return ImageContent(type="image", data=data, mimeType=IMAGE_TYPES[ext])
+
+    if ext in TEXT_EXTS:
+        text = p.read_text(encoding="utf-8", errors="replace")
+        if len(text) > MAX_IMAGE_BYTES:
+            text = text[:MAX_TEXT_CHARS] + f"\n\n[truncated, {len(text)} chars total]"
+        return TextContent(type="text", text=text)
+
+    raise ValueError(f"Unsupported file type: {ext or '(none)'}")
