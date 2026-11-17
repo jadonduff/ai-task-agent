@@ -218,7 +218,7 @@ def read_clipboard(name: str | None = None) -> ImageContent | TextContent:
     With no argument, returns the most recent clip. Text clips are returned as text, image clips as images.
 
     Args:
-        name: Optional file name inside /app/transfer (default: the newest clip).
+        name: Optional file name inside /app/transfer/clipboard (default: the newest clip).
 
     Returns:
         The clipboard text or image.
