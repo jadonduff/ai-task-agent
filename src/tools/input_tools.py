@@ -208,6 +208,9 @@ def press_keys(keys: list[str], wait_after: float = 0.3) -> str:
     time.sleep(wait_after)
     return f"Pressed {', '.join(fixed)}"
 
+
+## This is the POC for clipboard tools. To constantly read the OS' clipboard we need to have something running on the host's machine.
+## I will be continuing it later.
 @input_tools_mcp.tool()
 def read_clipboard(name: str | None = None) -> ImageContent | TextContent:
     """Reads clipboard data the user has sent over via the transfer folder.
