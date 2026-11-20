@@ -10,6 +10,10 @@ export DBUS_SESSION_BUS_ADDRESS
 # a11y: for `docker exec` debugging: source /tmp/dbus.env
 echo "export DISPLAY=:99 DBUS_SESSION_BUS_ADDRESS='$DBUS_SESSION_BUS_ADDRESS'" > /tmp/dbus.env
 
+# Log desktop notifications (used by getNotifications)
+xfconf-query -c xfce4-notifyd -p /notification-log -t bool -s true --create
+xfconf-query -c xfce4-notifyd -p /log-level -t string -s always --create
+
 # a11y: turn accessibility on directly on the a11y bus (no dconf needed)
 dbus-send --session --print-reply --dest=org.a11y.Bus /org/a11y/bus \
 org.freedesktop.DBus.Properties.Set \
@@ -24,6 +28,9 @@ for i in $(seq 1 50); do
 [ -e /tmp/.X11-unix/X99 ] && break
 sleep 0.1
 done
+
+# Give on-demand services (like notifications) the display
+dbus-update-activation-environment DISPLAY 2>/dev/null || true
 
 # XFCE (a11y: dbus-launch now happens above)
 startxfce4 &

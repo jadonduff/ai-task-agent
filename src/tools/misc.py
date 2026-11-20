@@ -1,6 +1,7 @@
 # ---- Libraries -------------------------------------------------------
 from fastmcp import FastMCP
 
+
 from datetime import datetime, timezone, date
 import urllib.request
 import socket
@@ -10,10 +11,14 @@ import smtplib
 import email
 from email.policy import default
 from email.message import EmailMessage
+import re
+import subprocess
 import os
+import ast
 
 # ---- MCP -------------------------------------------------------------
 misc_mcp = FastMCP("AI Task Agent")
+
 
 # ---- Screen & Input --------------------------------------------------
 @misc_mcp.tool
@@ -174,3 +179,43 @@ def send_email(recipient: str, subject: str, body:str) -> str:
         smtp.send_message(msg)
     
     return "Email has been sent."
+GVARIANT_TOKEN = re.compile(r"""('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")|@\S+ |\b(?:int64|uint32|int32|byte) |\b(?:true|false)\b""")
+
+@misc_mcp.tool
+def getNotifications(max_results: int = 10) -> list[dict]:
+    """Returns recent desktop notifications (pop-ups in the corner of the screen), newest first.
+    Use to check for messages from applications, driver updates, system updates, etc.
+
+    Args:
+        max_results: Maximum number of notifications to return (default: 10).
+
+    Returns:
+        A list of notifications, each with time, app, title, and body.
+    """
+
+    result = subprocess.run(
+        ["gdbus", "call", "--session", "--dest", "org.xfce.Notifyd",
+         "--object-path", "/org/xfce/Notifyd", "--method", "org.xfce.Notifyd.Log.List",
+         "", str(max_results), "false"],
+        capture_output=True, text=True, timeout=10,
+        env={**os.environ, "LC_ALL": "C.UTF-8"},
+    )
+    if result.returncode:
+        raise RuntimeError(f"Could not read the notification log: {result.stderr.strip()}")
+
+    literal = GVARIANT_TOKEN.sub(
+        lambda m: m.group(1) or {"true": "True", "false": "False"}.get(m.group(0), ""),
+        result.stdout,
+    )
+
+    notifications = []
+    for entry in ast.literal_eval(literal)[0]:
+        _id, timestamp_us, _tz, app_id, app_name, _icon, title, body = entry[:8]   # was: _app_id, app
+        notifications.append({
+            "time": datetime.fromtimestamp(timestamp_us / 1_000_000).isoformat(timespec="seconds"),
+            "app": app_name or app_id,                                              # was: app
+            "title": title,
+            "body": body,
+        })
+        
+    return notifications

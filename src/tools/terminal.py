@@ -1,5 +1,6 @@
 # ---- Libraries -------------------------------------------------------
 from fastmcp import FastMCP
+from datetime import datetime, timedelta
 
 import contextlib
 import subprocess
@@ -8,6 +9,7 @@ import shlex
 import time
 import io
 import os
+import shutil
 
 # ---- MCP -------------------------------------------------------------
 terminal_mcp = FastMCP("AI Task Agent")
@@ -65,12 +67,14 @@ def execute_python(code: str) -> dict:
 
 @terminal_mcp.tool
 def launch_app(command: str, env: dict[str, str] | None = None, wait_after: float = 2.0) -> str:
+
     """Launches a program in the background.
 
     Use for graphical applications or long-running processes that should
     continue after the tool returns. Process output is logged to /tmp/launch.log.
 
     Args:
+        env: Extra environmental variables for the program
         command: The program to launch and its arguments.
         env: Optional environment variables to set for the process, as a
             mapping of name to value (e.g. {"DISPLAY": ":99", "DEBUG": "1"}).
@@ -85,14 +89,8 @@ def launch_app(command: str, env: dict[str, str] | None = None, wait_after: floa
 
     log = open("/tmp/launch.log", "ab")
     try:
-        p = subprocess.Popen(
-            args,
-            env=proc_env,
-            stdin=subprocess.DEVNULL,
-            stdout=log,
-            stderr=log,
-            start_new_session=True,
-        )
+        p = subprocess.Popen(args, env={**os.environ, **(env or {})},
+                             stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
     except FileNotFoundError:
         raise ValueError(f"Program not found: {args[0]}")
     finally:
@@ -103,3 +101,59 @@ def launch_app(command: str, env: dict[str, str] | None = None, wait_after: floa
     if code not in (None, 0):
         raise RuntimeError(f"{args[0]} exited with code {code}; see /tmp/launch.log")
     return f"Launched {args[0]} (pid {p.pid})"
+
+@terminal_mcp.tool
+def scheduleApp(command: str, delaySeconds: float = 0, atTime: str | None = None, env: dict[str, str] | None = None) -> str:
+
+    """Schedules a program to launch once, later
+
+    Use to run a program after a delay or at a set time. Output is logged to /tmp/launch.log.
+    To cancel, kill the returned PID.
+
+    Args:
+        command: The program to launch and its arguments
+        delaySeconds: seconds to wait before launching the app
+        atTime: Launch the app at the specified time, E.G "15:30"
+        env: Environmental varible for the program
+
+    Returns:
+        A message with the launch time and the PID of the scheduled job.
+    """
+
+    args = shlex.split(command)
+
+    if not args or not shutil.which(args[0]):
+
+        raise ValueError(f"Program not found: {args[0] if args else '(empty command)'}")
+
+    if atTime:
+
+        try:
+            timeWhen = datetime.fromisoformat(atTime)
+
+        except ValueError:
+
+            clock = datetime.strptime(atTime, "%H:%M")
+            timeWhen = datetime.now().replace(hour=clock.hour, minute=clock.minute, second=0, microsecond=0)
+
+            if timeWhen <= datetime.now():
+                timeWhen += timedelta(days=1)
+
+        delaySeconds = (timeWhen - datetime.now(timeWhen.tzinfo)).total_seconds()
+
+    if delaySeconds < 0:
+
+        raise ValueError(f"{atTime or delaySeconds} is in the past")
+
+    log = open("/tmp/launch.log", "ab")
+
+    try:
+
+        timeProcess = subprocess.Popen(["sh", "-c", 'sleep "$0" && exec "$@"', f"{delaySeconds:.3f}", *args], env={**os.environ, **(env or {})}, 
+                                       stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+
+    finally:
+        log.close()
+
+    startTime = datetime.now() + timedelta(seconds=delaySeconds)
+    return f"Scheduled {args[0]} for {startTime:%Y-%m-%d %H:%M:%S} (pid {timeProcess.pid}; kill it to cancel)"
