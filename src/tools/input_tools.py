@@ -1,6 +1,6 @@
 # ---- Libraries -------------------------------------------------------
 from fastmcp import FastMCP
-from mcp.types import ImageContent, AudioContent
+from mcp.types import ImageContent, AudioContent, TextContent
 
 from pathlib import Path
 import subprocess
