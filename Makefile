@@ -58,7 +58,7 @@ runw-mcp: env-win
 	docker compose up -d --wait
 	docker compose logs -f
 
-runm-llm:
+runm-llm: env-mac
 	./scripts/run-llm-mac.sh lan
 
 runw-llm:
